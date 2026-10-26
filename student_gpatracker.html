@@ -68,8 +68,8 @@
     <h2>استكمال البيانات الشخصية</h2>
     <label>الاسم الرباعي (عربي)</label>
     <input id="regName" placeholder="مثال: محمد أحمد علي حسن" />
-    <label>رقم الهاتف</label>
-    <input id="regPhone" />
+    <label>رقم الهاتف (يبدأ بـ 20 ويكون 12 رقم)</label>
+    <input id="regPhone" type="tel" maxlength="12" minlength="12" placeholder="20xxxxxxxxxx" oninput="formatPhoneInput(this)" />
     <label>البريد الإلكتروني</label>
     <input id="regEmail" type="email" />
     <label>كلمة المرور</label>
@@ -607,6 +607,22 @@ document.addEventListener('DOMContentLoaded', () => {
     populateAcademicYears();
     populateRegAcademicYears();
 });
+ function formatPhoneInput(input) {
+  let val = input.value.replace(/\D/g, ''); // شيل أي حاجة مش رقم
+  
+  // لو الرقم مش بيبدأ بـ 20، نصلحه
+  if (val.length > 0 && !val.startsWith('20')) {
+    if (val.startsWith('0') || val.startsWith('1')) {
+      val = '20' + val.substring(1);
+    } else {
+      val = '20' + val;
+    }
+  }
+  
+  // الحد الأقصى 12 رقم
+  if (val.length > 12) val = val.substring(0, 12);
+  input.value = val;
+}
 </script>
 </body>
 </html>
