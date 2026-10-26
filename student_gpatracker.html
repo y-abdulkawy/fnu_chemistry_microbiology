@@ -1,31 +1,10 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
+<base target="_top">
 <meta charset="UTF-8">
-<title>نظام المتابعة الأكاديمية - GPA</title>
+<title>نظام المتابعة الأكاديمية</title>
 <style>
-     .home-btn {
-        position: fixed;
-        top: 15px;
-        right: 15px;
-        z-index: 9999;
-        background-color: #6c757d;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: 0.3s;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .home-btn:hover {
-        background-color: #5a6268;
-        color: white;
-        transform: translateY(-2px);
-    }
   * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
   body { margin: 0; background: #eef2f7; color: #1a2332; }
   .container { max-width: 1150px; margin: 20px auto; padding: 0 15px; }
@@ -56,29 +35,35 @@
   .total { font-weight: bold; margin: 10px 0; color: #0d47a1; font-size: 15px; }
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100; padding: 20px; overflow: auto; }
   .modal-content { background: #fff; max-width: 850px; margin: 30px auto; padding: 22px; border-radius: 12px; }
+  
+  /* زرار العودة للرئيسية */
+  .home-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+  .home-btn:hover { background-color: #5a6268; color: white; transform: translateY(-2px); }
 </style>
 </head>
 <body>
- <a href="index.html" class="home-btn">🏠 العودة للرئيسية</a>
+
+<!-- زرار العودة للرئيسية -->
+<a href="index.html" class="home-btn">🏠 العودة للرئيسية</a>
+
 <div class="container">
   <h1>🎓 نظام المتابعة الأكاديمية</h1>
 
+  <!-- بوابة الدخول -->
   <div id="loginCard" class="card">
     <h2>بوابة الدخول</h2>
     <label>الرقم القومي (14 رقماً)</label>
     <input id="idInput" placeholder="أدخل الرقم القومي" maxlength="14" oninput="toWestern(this)" />
     <button onclick="doLogin()">دخول</button>
     <div id="loginMsg" class="msg"></div>
-
     <div id="adminPanel" class="hidden" style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ccc;">
       <h3 style="color:#2e7d32; font-size: 16px;">👁️ لوحة تحكم الأدمن</h3>
       <label>اختر طالباً لعرض سجله:</label>
-      <select id="adminStudentSelect" onchange="loadAdminStudent()">
-        <option value="">— اختر طالباً —</option>
-      </select>
+      <select id="adminStudentSelect" onchange="loadAdminStudent()"><option value="">— اختر طالباً —</option></select>
     </div>
   </div>
 
+  <!-- استكمال البيانات -->
   <div id="regCard" class="card hidden">
     <h2>استكمال البيانات الشخصية</h2>
     <label>الاسم الرباعي (عربي)</label>
@@ -89,10 +74,24 @@
     <input id="regEmail" type="email" />
     <label>كلمة المرور</label>
     <input id="regPwd" type="password" />
+    
+    <!-- الحقول الجديدة -->
+    <label>المستوى الدراسي</label>
+    <select id="regLevel">
+      <option value="المستوى الأول">المستوى الأول</option>
+      <option value="المستوى الثاني">المستوى الثاني</option>
+      <option value="المستوى الثالث">المستوى الثالث</option>
+      <option value="المستوى الرابع">المستوى الرابع</option>
+    </select>
+
+    <label>العام الأكاديمي</label>
+    <select id="regAcademicYear"></select>
+
     <button onclick="doRegister()">حفظ البيانات</button>
     <div id="regMsg" class="msg"></div>
   </div>
 
+  <!-- لوحة التحكم -->
   <div id="dashCard" class="card hidden">
     <h2 id="welcome"></h2>
     <div class="stats">
@@ -105,13 +104,11 @@
     <div id="warningsBox" class="hidden" style="margin-top:16px;">
       <h3 style="color:#c62828;margin:0 0 8px 0;">⚠️ الإنذارات الأكاديمية</h3>
       <p style="font-size:13px;color:#555;margin-top:0;">يُصدر الإنذار عند نتيجة الفصل الربيعي إذا كان المعدل التراكمي أقل من 2.0</p>
-      <table>
-        <thead><tr><th>#</th><th>العام الأكاديمي</th><th>CGPA في نهاية الربيعي</th></tr></thead>
-        <tbody id="warningsBody"></tbody>
-      </table>
+      <table><thead><tr><th>#</th><th>العام الأكاديمي</th><th>CGPA في نهاية الربيعي</th></tr></thead><tbody id="warningsBody"></tbody></table>
     </div>
   </div>
 
+  <!-- تسجيل الفصل -->
   <div id="enrollCard" class="card hidden">
     <h2>تسجيل المقررات للفصل</h2>
     <div id="addSemesterBtnBox" style="margin-bottom: 15px;">
@@ -127,10 +124,7 @@
         <div><label>الفصل الدراسي</label><select id="semesterTerm" onchange="checkSemesterStatus()"><option value="fall">الخريفي</option><option value="spring">الربيعي</option><option value="summer">الصيفي</option></select></div>
       </div>
       <div id="courseTableBox" class="hidden" style="margin-top: 15px;">
-        <table>
-          <thead><tr><th>المقرر</th><th>الساعات</th><th>نوع التسجيل</th><th>التقدير</th><th></th></tr></thead>
-          <tbody id="courseRows"></tbody>
-        </table>
+        <table><thead><tr><th>المقرر</th><th>الساعات</th><th>نوع التسجيل</th><th>التقدير</th><th></th></tr></thead><tbody id="courseRows"></tbody></table>
         <button onclick="addRow()" id="btnAddCourse" style="margin-top:10px;">+ إضافة مقرر</button>
         <div class="total">إجمالي الساعات: <span id="totalHours">0</span> | الحد الأقصى: <span id="maxHours">18</span></div>
         <button onclick="saveSemester()" id="btnSave">💾 حفظ الفصل</button>
@@ -139,34 +133,28 @@
     </div>
   </div>
 
+  <!-- سجل الفصول -->
   <div id="historyCard" class="card hidden">
     <h2>📊 سجل الفصول الدراسية</h2>
     <p style="color:#666;font-size:13px;margin-top:-8px;">يعرض معدل كل فصل والمعدل التراكمي في نهايته</p>
-    <table>
-      <thead><tr><th>الفصل</th><th>الفصل الدراسي</th><th>المقررات</th><th>الساعات</th><th>معدل الفصل</th><th>نقاط الفصل</th><th>CGPA</th><th></th></tr></thead>
-      <tbody id="historyBody"></tbody>
-    </table>
+    <table><thead><tr><th>الفصل</th><th>الفصل الدراسي</th><th>المقررات</th><th>الساعات</th><th>معدل الفصل</th><th>نقاط الفصل</th><th>CGPA</th><th></th></tr></thead><tbody id="historyBody"></tbody></table>
   </div>
 </div>
 
+<!-- نافذة تفاصيل الفصل -->
 <div id="detailModal" class="modal-overlay">
   <div class="modal-content">
     <h3 id="detailTitle" style="margin-top:0; color:#0d47a1;"></h3>
     <p style="font-size:13px;color:#555;margin-top:-8px;">يمكنك تعديل التقدير من القائمة مباشرة، وسيتم الحفظ تلقائياً</p>
-    <table>
-      <thead><tr><th>الكود</th><th>المقرر</th><th>الساعات</th><th>التقدير</th><th>قيمة التقدير</th><th>نقاط المقرر</th><th>نوع التسجيل</th></tr></thead>
-      <tbody id="detailBody"></tbody>
-    </table>
+    <table><thead><tr><th>الكود</th><th>المقرر</th><th>الساعات</th><th>التقدير</th><th>قيمة التقدير</th><th>نقاط المقرر</th><th>نوع التسجيل</th></tr></thead><tbody id="detailBody"></tbody></table>
     <button class="secondary" style="margin-top:14px;" onclick="document.getElementById('detailModal').style.display='none'">إغلاق</button>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// 🌐 API Configuration — ضع رابط الـ Worker هنا
-// ═══════════════════════════════════════════
-const API_URL = 'https://trackgpa.yma00.workers.dev';
-
+// ⚠️ ضع رابط الـ Cloudflare Worker بتاع الـ GPA هنا
+const API_URL = 'https://trackgpa.yma00.workers.dev'; 
+     
 async function apiCall(action, params) {
   try {
     const response = await fetch(API_URL, {
@@ -208,6 +196,22 @@ function gpaColor(v) {
   return '#c62828';
 }
 
+// ملء قائمة السنوات في شاشة التسجيل
+function populateRegAcademicYears() {
+  const sel = document.getElementById('regAcademicYear');
+  if (!sel) return;
+  sel.innerHTML = '';
+  const currentYear = new Date().getFullYear(); // 2024 حالياً
+  for (let y = 2025; y <= 2035; y++) {
+    const label = y + '-' + (y + 1);
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    if (y === 2025) opt.selected = true; // اختيار 2025-2026 تلقائياً
+    sel.appendChild(opt);
+  }
+}
+
 function populateAcademicYears() {
   const sel = document.getElementById('academicYear');
   if (!sel) return;
@@ -221,6 +225,7 @@ function populateAcademicYears() {
   }
 }
 
+// دوال الأدمن
 function showAdminPanel() {
   document.getElementById('adminPanel').classList.remove('hidden');
   apiCall('adminGetAllStudents').then(res => {
@@ -284,13 +289,16 @@ function doLogin() {
   });
 }
 
+// تعديل دالة التسجيل عشان تبعت العام والمستوى
 function doRegister() {
   const form = {
     nationalId: CURRENT_ID,
     fullName: document.getElementById('regName').value,
     phone: document.getElementById('regPhone').value,
     email: document.getElementById('regEmail').value,
-    password: document.getElementById('regPwd').value
+    password: document.getElementById('regPwd').value,
+    level: document.getElementById('regLevel').value, // المستوى
+    academicYear: document.getElementById('regAcademicYear').value // العام
   };
   apiCall('registerStudent', { form: form }).then(res => {
     if (!res.ok) return showMsg('regMsg', res.msg, false);
@@ -313,7 +321,6 @@ function loadDashboard() {
     renderWarnings(d.warnings || []);
     loadGrades();
     loadHistory();
-
     apiCall('getNextSemester', { id: CURRENT_ID }).then(nextSem => {
       if (nextSem) {
         document.getElementById('academicYear').value = nextSem.academicYear;
@@ -328,10 +335,7 @@ function renderWarnings(warnings) {
   const box = document.getElementById('warningsBox');
   const body = document.getElementById('warningsBody');
   body.innerHTML = '';
-  if (!warnings || !warnings.length) {
-    box.classList.add('hidden');
-    return;
-  }
+  if (!warnings || !warnings.length) { box.classList.add('hidden'); return; }
   warnings.forEach((w, i) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${i + 1}</td><td><b>${w.academicYear}</b></td><td style="color:#c62828;font-weight:bold;">${w.cgpa.toFixed(2)}</td>`;
@@ -367,10 +371,8 @@ function checkSemesterStatus() {
   const academicYear = document.getElementById('academicYear').value;
   const semesterTerm = document.getElementById('semesterTerm').value;
   if (!academicYear || !semesterTerm) return;
-
   const termLabelAr = {fall: 'الخريفي', spring: 'الربيعي', summer: 'الصيفي'}[semesterTerm];
   const activeSemesterId = academicYear + ' - ' + termLabelAr;
-
   apiCall('getDashboard', { id: CURRENT_ID, activeSemesterId: activeSemesterId }).then(d => {
     CURRENT_STUDENT_DATA = d;
     document.getElementById('sLevel').textContent = d.level;
@@ -379,22 +381,16 @@ function checkSemesterStatus() {
     document.getElementById('sStatus').textContent = d.status;
     document.getElementById('sMainSemesters').textContent = d.mainSemesters || 0;
     renderWarnings(d.warnings || []);
-
     let max = 18, min = 12;
     if (semesterTerm === 'summer') { max = 9; min = 0; }
     else {
       if (d.status && d.status.indexOf('مراقب') !== -1) { max = 12; min = 0; }
-      else if (d.cgpa >= 3.7) {
-        if (d.level === 4) max = 22;
-        else if (d.level === 2 || d.level === 3) max = 20;
-      }
+      else if (d.cgpa >= 3.7) { if (d.level === 4) max = 22; else if (d.level === 2 || d.level === 3) max = 20; }
       else if (d.credits >= 90) { max = 22; min = 0; }
     }
-    CURRENT_MAX_CREDITS = max;
-    CURRENT_MIN_CREDITS = min;
+    CURRENT_MAX_CREDITS = max; CURRENT_MIN_CREDITS = min;
     document.getElementById('maxHours').textContent = max + ' (الحد الأدنى: ' + min + ')';
     loadCourses(activeSemesterId);
-
     apiCall('getEnrolledCoursesForSemester', { id: CURRENT_ID, academicYear: academicYear, semesterTerm: semesterTerm }).then(courses => {
       const tbody = document.getElementById('courseRows');
       tbody.innerHTML = ''; 
@@ -405,9 +401,7 @@ function checkSemesterStatus() {
         courses.forEach(c => {
           const tr = document.createElement('tr');
           let gradeOptions = '<option value="">— بدون درجة —</option>';
-          AVAILABLE_GRADES.forEach(g => {
-            gradeOptions += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`;
-          });
+          AVAILABLE_GRADES.forEach(g => { gradeOptions += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`; });
           tr.innerHTML = `
             <td><select class="c-select" disabled><option value="${c.code}" selected>${c.code} - ${c.name} (${c.hours}س)</option></select></td>
             <td class="c-hours">${c.hours}</td>
@@ -453,11 +447,7 @@ function addRow() {
   recalc();
 }
 
-function removeRow(btn) {
-  btn.closest('tr').remove();
-  refreshDropdowns();
-  recalc();
-}
+function removeRow(btn) { btn.closest('tr').remove(); refreshDropdowns(); recalc(); }
 
 function updateRow(sel) {
   const tr = sel.closest('tr');
@@ -473,11 +463,9 @@ function updateRow(sel) {
   });
   if (course && (currentTotal + course.hours) > CURRENT_MAX_CREDITS) {
     alert('عذراً، اختيار هذا المقرر سيتجاوز الحد الأقصى المسموح لك (' + CURRENT_MAX_CREDITS + ' ساعة).');
-    sel.value = '';
-    tr.querySelector('.c-hours').textContent = '-';
+    sel.value = ''; tr.querySelector('.c-hours').textContent = '-';
   }
-  recalc();
-  refreshDropdowns();
+  recalc(); refreshDropdowns();
 }
 
 function refreshDropdowns() {
@@ -517,16 +505,11 @@ function updateAddButtonState(currentTotal, maxCredits, minCourseHours) {
   const btn = document.getElementById('btnAddCourse');
   if (!btn) return;
   if (currentTotal + minCourseHours > maxCredits) {
-    btn.disabled = true;
-    btn.style.opacity = '0.5';
-    btn.style.cursor = 'not-allowed';
+    btn.disabled = true; btn.style.opacity = '0.5'; btn.style.cursor = 'not-allowed';
     if (currentTotal >= maxCredits) { btn.textContent = '⚠️ وصلت للحد الأقصى (' + maxCredits + ' ساعة)'; }
     else { btn.textContent = '⚠️ لا توجد مساحة كافية لمقرر جديد (المساحة المتاحة: ' + (maxCredits - currentTotal) + ' ساعة)'; }
   } else {
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    btn.style.cursor = 'pointer';
-    btn.textContent = '+ إضافة مقرر';
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = '+ إضافة مقرر';
   }
 }
 
@@ -543,40 +526,20 @@ function saveSemester() {
     const foundInAvailable = AVAILABLE_COURSES.find(x => x.code === code);
     const finalName = foundInAvailable ? foundInAvailable.name : name;
     const finalHours = foundInAvailable ? foundInAvailable.hours : hours;
-    courses.push({
-      code: code, name: finalName, hours: finalHours,
-      attemptType: tr.querySelector('.c-type').value,
-      grade: tr.querySelector('.c-grade').value || ''
-    });
+    courses.push({ code: code, name: finalName, hours: finalHours, attemptType: tr.querySelector('.c-type').value, grade: tr.querySelector('.c-grade').value || '' });
   });
-  const payload = {
-    nationalId: CURRENT_ID,
-    academicYear: document.getElementById('academicYear').value,
-    semesterTerm: document.getElementById('semesterTerm').value,
-    courses: courses,
-    isUpdate: IS_UPDATE_MODE
-  };
+  const payload = { nationalId: CURRENT_ID, academicYear: document.getElementById('academicYear').value, semesterTerm: document.getElementById('semesterTerm').value, courses: courses, isUpdate: IS_UPDATE_MODE };
   if (!payload.academicYear) return showMsg('enrollMsg', 'اختر العام الأكاديمي', false);
   apiCall('saveSemester', { payload: payload }).then(res => {
     showMsg('enrollMsg', res.msg, res.ok);
-    if (res.ok) {
-      hideSemesterSelection();
-      loadDashboard();
-      loadHistory();
-    }
+    if (res.ok) { hideSemesterSelection(); loadDashboard(); loadHistory(); }
   });
 }
 
 function loadHistory() {
   apiCall('getSemesterHistory', { id: CURRENT_ID }).then(list => {
-    const tbody = document.getElementById('historyBody');
-    const card = document.getElementById('historyCard');
-    tbody.innerHTML = '';
-    if (!list || !list.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="color:#888;padding:20px;">لا يوجد سجل درجات بعد</td></tr>';
-      card.classList.remove('hidden');
-      return;
-    }
+    const tbody = document.getElementById('historyBody'); const card = document.getElementById('historyCard'); tbody.innerHTML = '';
+    if (!list || !list.length) { tbody.innerHTML = '<tr><td colspan="8" style="color:#888;padding:20px;">لا يوجد سجل درجات بعد</td></tr>'; card.classList.remove('hidden'); return; }
     const termLabels = { fall: 'الخريفي', spring: 'الربيعي', summer: 'الصيفي' };
     list.forEach(s => {
       const typeLabel = termLabels[s.semesterTerm] || s.semesterTerm || '—';
@@ -594,42 +557,26 @@ function loadHistory() {
       tbody.appendChild(tr);
     });
     const last = list[list.length - 1];
-    const summary = document.createElement('tr');
-    summary.style.background = '#f0f7ff';
-    summary.innerHTML = `
-      <td colspan="3"><b>الإجمالي</b></td>
-      <td><b>${last.cumulativeCredits}</b></td>
-      <td>—</td>
-      <td style="font-weight:bold; color:#0d47a1; font-size:15px;">${last.cumulativePoints.toFixed(2)}</td>
-      <td style="color:${gpaColor(last.cumulativeGPA)};font-weight:bold;font-size:15px;">${last.cumulativeGPA.toFixed(2)}</td>
-      <td></td>
-    `;
-    tbody.appendChild(summary);
-    card.classList.remove('hidden');
+    const summary = document.createElement('tr'); summary.style.background = '#f0f7ff';
+    summary.innerHTML = `<td colspan="3"><b>الإجمالي</b></td><td><b>${last.cumulativeCredits}</b></td><td>—</td><td style="font-weight:bold; color:#0d47a1; font-size:15px;">${last.cumulativePoints.toFixed(2)}</td><td style="color:${gpaColor(last.cumulativeGPA)};font-weight:bold;font-size:15px;">${last.cumulativeGPA.toFixed(2)}</td><td></td>`;
+    tbody.appendChild(summary); card.classList.remove('hidden');
   });
 }
 
 function openDetails(semesterId) {
   apiCall('getSemesterDetails', { id: CURRENT_ID, semesterId: semesterId }).then(courses => {
     document.getElementById('detailTitle').textContent = 'تفاصيل الفصل: ' + semesterId;
-    const tbody = document.getElementById('detailBody');
-    tbody.innerHTML = '';
+    const tbody = document.getElementById('detailBody'); tbody.innerHTML = '';
     if (!courses.length) { tbody.innerHTML = '<tr><td colspan="7">لا توجد بيانات</td></tr>'; } 
     else {
       const typeLabels = { 'first': 'أول مرة', 'improvement': 'تحسين', 'repeat_failure': 'إعادة رسوب' };
       courses.forEach(c => {
-        let gradeOptionsHtml = '<option value="">— بدون —</option>';
-        let found = false;
-        AVAILABLE_GRADES.forEach(g => {
-          if (g.grade === c.grade) found = true;
-          gradeOptionsHtml += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`;
-        });
+        let gradeOptionsHtml = '<option value="">— بدون —</option>'; let found = false;
+        AVAILABLE_GRADES.forEach(g => { if (g.grade === c.grade) found = true; gradeOptionsHtml += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`; });
         if (!found && c.grade) { gradeOptionsHtml += `<option value="${c.grade}" selected>${c.grade} (${c.points})</option>`; }
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${c.code}</td>
-          <td style="text-align:right;">${c.name}</td>
-          <td>${c.hours}</td>
+          <td>${c.code}</td><td style="text-align:right;">${c.name}</td><td>${c.hours}</td>
           <td><select class="detail-grade" data-code="${c.code}" data-sem="${semesterId}" onchange="changeGrade(this)">${gradeOptionsHtml}</select></td>
           <td class="pts-cell" data-code="${c.code}">${c.hasGrade ? c.points.toFixed(2) : '—'}</td>
           <td class="qp-cell" data-code="${c.code}" style="font-weight:bold; color:#0d47a1;">${c.hasGrade ? c.qualityPoints.toFixed(2) : '—'}</td>
@@ -643,28 +590,23 @@ function openDetails(semesterId) {
 }
 
 function changeGrade(sel) {
-  const code = sel.dataset.code;
-  const sem = sel.dataset.sem;
-  const grade = sel.value;
+  const code = sel.dataset.code; const sem = sel.dataset.sem; const grade = sel.value;
   apiCall('updateGrade', { id: CURRENT_ID, semesterId: sem, courseCode: code, grade: grade }).then(res => {
     if (!res.ok) { alert(res.msg); return; }
     let newPoints = 0;
-    if (grade) {
-      const found = AVAILABLE_GRADES.find(g => g.grade === grade);
-      if (found) newPoints = found.points;
-    }
-    const cell = document.querySelector(`.pts-cell[data-code="${code}"]`);
-    if (cell) cell.textContent = grade ? newPoints.toFixed(2) : '—';
-    const hoursText = sel.closest('tr').children[2].textContent;
-    const hours = isNaN(hoursText) ? 0 : Number(hoursText);
-    const qpCell = document.querySelector(`.qp-cell[data-code="${code}"]`);
-    if (qpCell) qpCell.textContent = grade ? (newPoints * hours).toFixed(2) : '—';
-    loadDashboard();
-    loadHistory();
+    if (grade) { const found = AVAILABLE_GRADES.find(g => g.grade === grade); if (found) newPoints = found.points; }
+    const cell = document.querySelector(`.pts-cell[data-code="${code}"]`); if (cell) cell.textContent = grade ? newPoints.toFixed(2) : '—';
+    const hoursText = sel.closest('tr').children[2].textContent; const hours = isNaN(hoursText) ? 0 : Number(hoursText);
+    const qpCell = document.querySelector(`.qp-cell[data-code="${code}"]`); if (qpCell) qpCell.textContent = grade ? (newPoints * hours).toFixed(2) : '—';
+    loadDashboard(); loadHistory();
   });
 }
 
-document.addEventListener('DOMContentLoaded', populateAcademicYears);
+// تشغيل الدوال أول ما الصفحة تفتح
+document.addEventListener('DOMContentLoaded', () => {
+    populateAcademicYears();
+    populateRegAcademicYears();
+});
 </script>
 </body>
 </html>
