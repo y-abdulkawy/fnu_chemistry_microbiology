@@ -1137,10 +1137,14 @@
 
     function uploadFileToDrive(file, url, onProgress) {
       return new Promise(function(resolve, reject) {
+        // هنبعت الصورة للـ Cloudflare بتاعك بدل جوجل مباشرة
+        const workerUrl = 'https://fnu-chemistry-microbiology.ymao00.workers.dev/upload?url=' + encodeURIComponent(url);
+        
         const xhr = new XMLHttpRequest();
         let uploadComplete = false;
-        xhr.open('PUT', url, true);
+        xhr.open('PUT', workerUrl, true);
         xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        
         xhr.upload.onprogress = function(e) {
           if (e.lengthComputable) onProgress((e.loaded / e.total) * 100, e.loaded, e.total);
         };
@@ -1154,12 +1158,11 @@
         };
         xhr.onerror = function() {
           if (uploadComplete) resolve({ success: true });
-          else reject(new Error('فشل الاتصال'));
+          else reject(new Error('فشل الاتصال بالسيرفر أثناء الرفع'));
         };
         xhr.send(file);
       });
     }
-
     function openStudentProfileModal() {
       const alertDiv = document.getElementById('editStuProfileAlert');
       alertDiv.className = 'd-none';
