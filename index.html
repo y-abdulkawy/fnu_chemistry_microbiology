@@ -423,7 +423,7 @@
     // ═══════════════════════════════════════════
     // 🌐 API Configuration — ضع رابط الـ /exec هنا
     // ═══════════════════════════════════════════
-    const API_URL = 'https://fnu-chemistry-microbiology.yma00.workers.dev/';
+    const API_URL = 'https://fnuebook.yma00.workers.dev';
 
     async function apiCall(action, params) {
       try {
@@ -1138,7 +1138,7 @@
     function uploadFileToDrive(file, url, onProgress) {
       return new Promise(function(resolve, reject) {
         // هنبعت الصورة للـ Cloudflare بتاعك بدل جوجل مباشرة
-        const workerUrl = 'https://fnu-chemistry-microbiology.yma00.workers.dev/upload?url=' + encodeURIComponent(url);
+        const workerUrl = 'https://fnuebook.yma00.workers.dev/upload?url=' + encodeURIComponent(url);
         
         const xhr = new XMLHttpRequest();
         let uploadComplete = false;
