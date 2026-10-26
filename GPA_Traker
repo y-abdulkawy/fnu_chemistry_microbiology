@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>نظام المتابعة الأكاديمية - GPA</title>
+<style>
+  * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { margin: 0; background: #eef2f7; color: #1a2332; }
+  .container { max-width: 1150px; margin: 20px auto; padding: 0 15px; }
+  h1 { color: #0d47a1; text-align: center; }
+  h2 { color: #1565c0; margin-top: 0; }
+  h3 { color: #1565c0; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  label { display: block; margin: 10px 0 4px; font-weight: 600; }
+  input, select, button { width: 100%; padding: 10px; border: 1px solid #cfd8dc; border-radius: 6px; font-size: 15px; margin-bottom: 8px; background: #fff; }
+  button { background: #1976d2; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+  button:hover { background: #1565c0; }
+  button.secondary { background: #546e7a; }
+  button.secondary:hover { background: #455a64; }
+  button.danger { background: #c62828; width: auto; padding: 6px 12px; }
+  button.danger:hover { background: #b71c1c; }
+  .msg { margin-top: 8px; font-size: 14px; min-height: 18px; }
+  .msg.err { color: #c62828; }
+  .msg.ok { color: #2e7d32; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .stat { background: #e3f2fd; border-radius: 8px; padding: 14px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: bold; color: #0d47a1; }
+  .stat .l { font-size: 13px; color: #555; }
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  th, td { border: 1px solid #e0e0e0; padding: 8px; text-align: center; font-size: 14px; }
+  th { background: #f5f5f5; font-weight: 700; }
+  tbody tr:hover { background: #fafafa; }
+  .hidden { display: none !important; }
+  .total { font-weight: bold; margin: 10px 0; color: #0d47a1; font-size: 15px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100; padding: 20px; overflow: auto; }
+  .modal-content { background: #fff; max-width: 850px; margin: 30px auto; padding: 22px; border-radius: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎓 نظام المتابعة الأكاديمية</h1>
+
+  <div id="loginCard" class="card">
+    <h2>بوابة الدخول</h2>
+    <label>الرقم القومي (14 رقماً)</label>
+    <input id="idInput" placeholder="أدخل الرقم القومي" maxlength="14" oninput="toWestern(this)" />
+    <button onclick="doLogin()">دخول</button>
+    <div id="loginMsg" class="msg"></div>
+
+    <div id="adminPanel" class="hidden" style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ccc;">
+      <h3 style="color:#2e7d32; font-size: 16px;">👁️ لوحة تحكم الأدمن</h3>
+      <label>اختر طالباً لعرض سجله:</label>
+      <select id="adminStudentSelect" onchange="loadAdminStudent()">
+        <option value="">— اختر طالباً —</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="regCard" class="card hidden">
+    <h2>استكمال البيانات الشخصية</h2>
+    <label>الاسم الرباعي (عربي)</label>
+    <input id="regName" placeholder="مثال: محمد أحمد علي حسن" />
+    <label>رقم الهاتف</label>
+    <input id="regPhone" />
+    <label>البريد الإلكتروني</label>
+    <input id="regEmail" type="email" />
+    <label>كلمة المرور</label>
+    <input id="regPwd" type="password" />
+    <button onclick="doRegister()">حفظ البيانات</button>
+    <div id="regMsg" class="msg"></div>
+  </div>
+
+  <div id="dashCard" class="card hidden">
+    <h2 id="welcome"></h2>
+    <div class="stats">
+      <div class="stat"><div class="v" id="sLevel">-</div><div class="l">المستوى</div></div>
+      <div class="stat"><div class="v" id="sCgpa">-</div><div class="l">CGPA</div></div>
+      <div class="stat"><div class="v" id="sCredits">-</div><div class="l">الساعات المكتسبة</div></div>
+      <div class="stat"><div class="v" id="sStatus">-</div><div class="l">الحالة الأكاديمية</div></div>
+      <div class="stat"><div class="v" id="sMainSemesters">-</div><div class="l">فصول رئيسية</div></div>
+    </div>
+    <div id="warningsBox" class="hidden" style="margin-top:16px;">
+      <h3 style="color:#c62828;margin:0 0 8px 0;">⚠️ الإنذارات الأكاديمية</h3>
+      <p style="font-size:13px;color:#555;margin-top:0;">يُصدر الإنذار عند نتيجة الفصل الربيعي إذا كان المعدل التراكمي أقل من 2.0</p>
+      <table>
+        <thead><tr><th>#</th><th>العام الأكاديمي</th><th>CGPA في نهاية الربيعي</th></tr></thead>
+        <tbody id="warningsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="enrollCard" class="card hidden">
+    <h2>تسجيل المقررات للفصل</h2>
+    <div id="addSemesterBtnBox" style="margin-bottom: 15px;">
+      <button onclick="showSemesterSelection()" style="background: #2e7d32; padding: 12px; font-size: 16px;">➕ إضافة فصل دراسي جديد</button>
+    </div>
+    <div id="semesterSelectionBox" class="hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 style="margin:0; color:#1565c0;">تحديد الفصل الدراسي</h3>
+        <button onclick="hideSemesterSelection()" class="secondary" style="width:auto; margin:0; padding:5px 10px; font-size:12px;">إغلاق ✖</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div><label>العام الأكاديمي</label><select id="academicYear" onchange="checkSemesterStatus()"></select></div>
+        <div><label>الفصل الدراسي</label><select id="semesterTerm" onchange="checkSemesterStatus()"><option value="fall">الخريفي</option><option value="spring">الربيعي</option><option value="summer">الصيفي</option></select></div>
+      </div>
+      <div id="courseTableBox" class="hidden" style="margin-top: 15px;">
+        <table>
+          <thead><tr><th>المقرر</th><th>الساعات</th><th>نوع التسجيل</th><th>التقدير</th><th></th></tr></thead>
+          <tbody id="courseRows"></tbody>
+        </table>
+        <button onclick="addRow()" id="btnAddCourse" style="margin-top:10px;">+ إضافة مقرر</button>
+        <div class="total">إجمالي الساعات: <span id="totalHours">0</span> | الحد الأقصى: <span id="maxHours">18</span></div>
+        <button onclick="saveSemester()" id="btnSave">💾 حفظ الفصل</button>
+        <div id="enrollMsg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="historyCard" class="card hidden">
+    <h2>📊 سجل الفصول الدراسية</h2>
+    <p style="color:#666;font-size:13px;margin-top:-8px;">يعرض معدل كل فصل والمعدل التراكمي في نهايته</p>
+    <table>
+      <thead><tr><th>الفصل</th><th>الفصل الدراسي</th><th>المقررات</th><th>الساعات</th><th>معدل الفصل</th><th>نقاط الفصل</th><th>CGPA</th><th></th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="detailModal" class="modal-overlay">
+  <div class="modal-content">
+    <h3 id="detailTitle" style="margin-top:0; color:#0d47a1;"></h3>
+    <p style="font-size:13px;color:#555;margin-top:-8px;">يمكنك تعديل التقدير من القائمة مباشرة، وسيتم الحفظ تلقائياً</p>
+    <table>
+      <thead><tr><th>الكود</th><th>المقرر</th><th>الساعات</th><th>التقدير</th><th>قيمة التقدير</th><th>نقاط المقرر</th><th>نوع التسجيل</th></tr></thead>
+      <tbody id="detailBody"></tbody>
+    </table>
+    <button class="secondary" style="margin-top:14px;" onclick="document.getElementById('detailModal').style.display='none'">إغلاق</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// 🌐 API Configuration — ضع رابط الـ Worker هنا
+// ═══════════════════════════════════════════
+const API_URL = 'ضع_رابط_الـ_Worker_هنا';
+
+async function apiCall(action, params) {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: action, ...(params || {}) })
+    });
+    return await response.json();
+  } catch (err) {
+    return { ok: false, msg: 'خطأ في الاتصال: ' + err.message };
+  }
+}
+
+let CURRENT_ID = null;
+let AVAILABLE_COURSES = [];
+let AVAILABLE_GRADES = [];
+let CURRENT_MAX_CREDITS = 18;
+let CURRENT_MIN_CREDITS = 12;
+let CURRENT_STUDENT_DATA = {};
+let IS_UPDATE_MODE = false;
+
+function toWestern(el) {
+  const ar = '٠١٢٣٤٥٦٧٨٩';
+  let v = el.value;
+  for (let i = 0; i < 10; i++) v = v.replace(new RegExp(ar[i], 'g'), String(i));
+  el.value = v.replace(/\D/g, '');
+}
+
+function showMsg(id, text, ok) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+
+function gpaColor(v) {
+  if (v >= 3.0) return '#2e7d32';
+  if (v >= 2.0) return '#0d47a1';
+  if (v >= 1.7) return '#f57c00';
+  return '#c62828';
+}
+
+function populateAcademicYears() {
+  const sel = document.getElementById('academicYear');
+  if (!sel) return;
+  sel.innerHTML = '';
+  for (let y = 2025; y <= 2035; y++) {
+    const label = y + '-' + (y + 1);
+    const opt = document.createElement('option');
+    opt.value = label;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  }
+}
+
+function showAdminPanel() {
+  document.getElementById('adminPanel').classList.remove('hidden');
+  apiCall('adminGetAllStudents').then(res => {
+    if (!res || !res.length) return;
+    const sel = document.getElementById('adminStudentSelect');
+    sel.innerHTML = '<option value="">— اختر طالباً —</option>';
+    res.forEach(st => {
+      const opt = document.createElement('option');
+      opt.value = st.id;
+      opt.textContent = st.name + ' (' + st.id + ')';
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function loadAdminStudent() {
+  const id = document.getElementById('adminStudentSelect').value;
+  if (!id) return;
+  apiCall('adminGetStudentProfile', { id: id }).then(res => {
+    if (!res) return;
+    CURRENT_ID = res.id;
+    document.getElementById('loginCard').classList.add('hidden');
+    document.getElementById('welcome').innerHTML = 'مرحباً، ' + res.name + ' <span style="font-size:14px; color:#2e7d32;">(وضع الأدمن 👁️)</span>';
+    loadDashboard();
+  });
+}
+
+function showSemesterSelection() {
+  document.getElementById('addSemesterBtnBox').classList.add('hidden');
+  document.getElementById('semesterSelectionBox').classList.remove('hidden');
+  document.getElementById('courseTableBox').classList.remove('hidden');
+  checkSemesterStatus();
+}
+
+function hideSemesterSelection() {
+  document.getElementById('addSemesterBtnBox').classList.remove('hidden');
+  document.getElementById('semesterSelectionBox').classList.add('hidden');
+  document.getElementById('courseTableBox').classList.add('hidden');
+}
+
+function doLogin() {
+  const id = document.getElementById('idInput').value;
+  showMsg('loginMsg', 'جاري التحقق...', true);
+  apiCall('validateId', { id: id }).then(res => {
+    if (!res.ok) return showMsg('loginMsg', res.msg, false);
+    if (res.isAdmin) {
+      showMsg('loginMsg', 'مرحباً بك يا مدير النظام. اختر طالباً.', true);
+      showAdminPanel();
+      return;
+    }
+    CURRENT_ID = res.id;
+    if (res.registered) {
+      document.getElementById('loginCard').classList.add('hidden');
+      document.getElementById('regCard').classList.add('hidden');
+      document.getElementById('welcome').textContent = 'مرحباً، ' + res.name;
+      loadDashboard();
+    } else {
+      document.getElementById('loginCard').classList.add('hidden');
+      document.getElementById('regCard').classList.remove('hidden');
+    }
+  });
+}
+
+function doRegister() {
+  const form = {
+    nationalId: CURRENT_ID,
+    fullName: document.getElementById('regName').value,
+    phone: document.getElementById('regPhone').value,
+    email: document.getElementById('regEmail').value,
+    password: document.getElementById('regPwd').value
+  };
+  apiCall('registerStudent', { form: form }).then(res => {
+    if (!res.ok) return showMsg('regMsg', res.msg, false);
+    document.getElementById('regCard').classList.add('hidden');
+    document.getElementById('welcome').textContent = 'مرحباً، ' + form.fullName;
+    loadDashboard();
+  });
+}
+
+function loadDashboard() {
+  apiCall('getDashboard', { id: CURRENT_ID, activeSemesterId: null }).then(d => {
+    CURRENT_STUDENT_DATA = d;
+    document.getElementById('sLevel').textContent = d.level;
+    document.getElementById('sCgpa').textContent = d.cgpa.toFixed(2);
+    document.getElementById('sCredits').textContent = d.credits;
+    document.getElementById('sStatus').textContent = d.status;
+    document.getElementById('sMainSemesters').textContent = d.mainSemesters || 0;
+    document.getElementById('dashCard').classList.remove('hidden');
+    document.getElementById('enrollCard').classList.remove('hidden');
+    renderWarnings(d.warnings || []);
+    loadGrades();
+    loadHistory();
+
+    apiCall('getNextSemester', { id: CURRENT_ID }).then(nextSem => {
+      if (nextSem) {
+        document.getElementById('academicYear').value = nextSem.academicYear;
+        document.getElementById('semesterTerm').value = nextSem.semesterTerm;
+      }
+      hideSemesterSelection();
+    });
+  });
+}
+
+function renderWarnings(warnings) {
+  const box = document.getElementById('warningsBox');
+  const body = document.getElementById('warningsBody');
+  body.innerHTML = '';
+  if (!warnings || !warnings.length) {
+    box.classList.add('hidden');
+    return;
+  }
+  warnings.forEach((w, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i + 1}</td><td><b>${w.academicYear}</b></td><td style="color:#c62828;font-weight:bold;">${w.cgpa.toFixed(2)}</td>`;
+    body.appendChild(tr);
+  });
+  box.classList.remove('hidden');
+}
+
+function loadGrades() {
+  apiCall('getGradesList').then(list => {
+    AVAILABLE_GRADES = list || [];
+    document.querySelectorAll('.c-grade').forEach(sel => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— بدون درجة —</option>';
+      AVAILABLE_GRADES.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.grade;
+        opt.textContent = g.grade + ' (' + g.points + ')';
+        sel.appendChild(opt);
+      });
+      sel.value = cur;
+    });
+  });
+}
+
+function loadCourses(activeSemesterId) {
+  apiCall('getAvailableCourses', { id: CURRENT_ID, activeSemesterId: activeSemesterId }).then(list => {
+    AVAILABLE_COURSES = list;
+  });
+}
+
+function checkSemesterStatus() {
+  const academicYear = document.getElementById('academicYear').value;
+  const semesterTerm = document.getElementById('semesterTerm').value;
+  if (!academicYear || !semesterTerm) return;
+
+  const termLabelAr = {fall: 'الخريفي', spring: 'الربيعي', summer: 'الصيفي'}[semesterTerm];
+  const activeSemesterId = academicYear + ' - ' + termLabelAr;
+
+  apiCall('getDashboard', { id: CURRENT_ID, activeSemesterId: activeSemesterId }).then(d => {
+    CURRENT_STUDENT_DATA = d;
+    document.getElementById('sLevel').textContent = d.level;
+    document.getElementById('sCgpa').textContent = d.cgpa.toFixed(2);
+    document.getElementById('sCredits').textContent = d.credits;
+    document.getElementById('sStatus').textContent = d.status;
+    document.getElementById('sMainSemesters').textContent = d.mainSemesters || 0;
+    renderWarnings(d.warnings || []);
+
+    let max = 18, min = 12;
+    if (semesterTerm === 'summer') { max = 9; min = 0; }
+    else {
+      if (d.status && d.status.indexOf('مراقب') !== -1) { max = 12; min = 0; }
+      else if (d.cgpa >= 3.7) {
+        if (d.level === 4) max = 22;
+        else if (d.level === 2 || d.level === 3) max = 20;
+      }
+      else if (d.credits >= 90) { max = 22; min = 0; }
+    }
+    CURRENT_MAX_CREDITS = max;
+    CURRENT_MIN_CREDITS = min;
+    document.getElementById('maxHours').textContent = max + ' (الحد الأدنى: ' + min + ')';
+    loadCourses(activeSemesterId);
+
+    apiCall('getEnrolledCoursesForSemester', { id: CURRENT_ID, academicYear: academicYear, semesterTerm: semesterTerm }).then(courses => {
+      const tbody = document.getElementById('courseRows');
+      tbody.innerHTML = ''; 
+      if (courses && courses.length > 0) {
+        IS_UPDATE_MODE = true;
+        document.getElementById('btnSave').textContent = '💾 حفظ التعديلات';
+        document.getElementById('enrollMsg').innerHTML = '<span style="color:#f57c00;">⚠️ أنت تقوم بتعديل فصل تم تسجيله مسبقاً. يمكنك إضافة أو حذف مقررات ثم الضغط على حفظ التعديلات.</span>';
+        courses.forEach(c => {
+          const tr = document.createElement('tr');
+          let gradeOptions = '<option value="">— بدون درجة —</option>';
+          AVAILABLE_GRADES.forEach(g => {
+            gradeOptions += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`;
+          });
+          tr.innerHTML = `
+            <td><select class="c-select" disabled><option value="${c.code}" selected>${c.code} - ${c.name} (${c.hours}س)</option></select></td>
+            <td class="c-hours">${c.hours}</td>
+            <td><select class="c-type"><option value="first" ${c.attemptType === 'first' ? 'selected' : ''}>أول مرة</option><option value="improvement" ${c.attemptType === 'improvement' ? 'selected' : ''}>تحسين</option><option value="repeat_failure" ${c.attemptType === 'repeat_failure' ? 'selected' : ''}>إعادة رسوب</option></select></td>
+            <td><select class="c-grade">${gradeOptions}</select></td>
+            <td><button class="danger" onclick="removeRow(this)">حذف</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+        recalc();
+      } else {
+        IS_UPDATE_MODE = false;
+        document.getElementById('btnSave').textContent = '💾 حفظ الفصل';
+        document.getElementById('enrollMsg').innerHTML = '';
+        addRow();
+      }
+    });
+  });
+}
+
+function addRow() {
+  let currentTotal = 0;
+  document.querySelectorAll('#courseRows tr').forEach(tr => {
+    const selectEl = tr.querySelector('.c-select');
+    if (!selectEl || !selectEl.value) return;
+    const hoursText = tr.querySelector('.c-hours').textContent;
+    if (!isNaN(hoursText)) currentTotal += Number(hoursText);
+  });
+  if (currentTotal >= CURRENT_MAX_CREDITS && CURRENT_MAX_CREDITS !== 0) return;
+  const tbody = document.getElementById('courseRows');
+  const tr = document.createElement('tr');
+  let gradeOptions = '<option value="">— بدون درجة —</option>';
+  AVAILABLE_GRADES.forEach(g => { gradeOptions += `<option value="${g.grade}">${g.grade} (${g.points})</option>`; });
+  tr.innerHTML = `
+    <td><select class="c-select" onchange="updateRow(this)"></select></td>
+    <td class="c-hours">-</td>
+    <td><select class="c-type"><option value="first">أول مرة</option><option value="improvement">تحسين</option><option value="repeat_failure">إعادة رسوب</option></select></td>
+    <td><select class="c-grade">${gradeOptions}</select></td>
+    <td><button class="danger" onclick="removeRow(this)">حذف</button></td>
+  `;
+  tbody.appendChild(tr);
+  refreshDropdowns();
+  recalc();
+}
+
+function removeRow(btn) {
+  btn.closest('tr').remove();
+  refreshDropdowns();
+  recalc();
+}
+
+function updateRow(sel) {
+  const tr = sel.closest('tr');
+  const course = AVAILABLE_COURSES.find(c => c.code === sel.value);
+  tr.querySelector('.c-hours').textContent = course ? course.hours : '-';
+  let currentTotal = 0;
+  document.querySelectorAll('#courseRows tr').forEach(row => {
+    if (row === tr) return; 
+    const s = row.querySelector('.c-select');
+    if (!s || !s.value) return;
+    const hoursText = row.querySelector('.c-hours').textContent;
+    if (!isNaN(hoursText)) currentTotal += Number(hoursText);
+  });
+  if (course && (currentTotal + course.hours) > CURRENT_MAX_CREDITS) {
+    alert('عذراً، اختيار هذا المقرر سيتجاوز الحد الأقصى المسموح لك (' + CURRENT_MAX_CREDITS + ' ساعة).');
+    sel.value = '';
+    tr.querySelector('.c-hours').textContent = '-';
+  }
+  recalc();
+  refreshDropdowns();
+}
+
+function refreshDropdowns() {
+  const selected = new Set(Array.from(document.querySelectorAll('.c-select')).filter(sel => !sel.disabled).map(s => s.value).filter(Boolean));
+  document.querySelectorAll('.c-select').forEach(sel => {
+    if (sel.disabled) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— اختر —</option>';
+    AVAILABLE_COURSES.forEach(c => {
+      if (selected.has(c.code) && c.code !== cur) return;
+      const opt = document.createElement('option');
+      opt.value = c.code;
+      let label = c.code + ' - ' + c.name + ' (' + c.hours + 'س)';
+      if (c.alreadyTaken) label += ' ✔ مسجل سابقاً';
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    sel.value = cur;
+  });
+}
+
+function recalc() {
+  let total = 0;
+  document.querySelectorAll('#courseRows tr').forEach(tr => {
+    const selectEl = tr.querySelector('.c-select');
+    if (!selectEl || !selectEl.value) return;
+    const hoursText = tr.querySelector('.c-hours').textContent;
+    if (!isNaN(hoursText)) total += Number(hoursText);
+  });
+  document.getElementById('totalHours').textContent = total;
+  let minCourseHours = 3; 
+  if (AVAILABLE_COURSES && AVAILABLE_COURSES.length > 0) { minCourseHours = Math.min(...AVAILABLE_COURSES.map(c => Number(c.hours))); }
+  updateAddButtonState(total, CURRENT_MAX_CREDITS, minCourseHours);
+}
+
+function updateAddButtonState(currentTotal, maxCredits, minCourseHours) {
+  const btn = document.getElementById('btnAddCourse');
+  if (!btn) return;
+  if (currentTotal + minCourseHours > maxCredits) {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+    if (currentTotal >= maxCredits) { btn.textContent = '⚠️ وصلت للحد الأقصى (' + maxCredits + ' ساعة)'; }
+    else { btn.textContent = '⚠️ لا توجد مساحة كافية لمقرر جديد (المساحة المتاحة: ' + (maxCredits - currentTotal) + ' ساعة)'; }
+  } else {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+    btn.textContent = '+ إضافة مقرر';
+  }
+}
+
+function saveSemester() {
+  const courses = [];
+  document.querySelectorAll('#courseRows tr').forEach(tr => {
+    const selectEl = tr.querySelector('.c-select');
+    if (!selectEl || !selectEl.value) return;
+    const code = selectEl.value;
+    const hoursText = tr.querySelector('.c-hours').textContent;
+    const hours = isNaN(hoursText) ? 0 : Number(hoursText);
+    const optionText = selectEl.options[selectEl.selectedIndex].text;
+    const name = optionText.split(' - ')[1] ? optionText.split(' - ')[1].replace(/\s*\(\d+س\)$/, '') : code;
+    const foundInAvailable = AVAILABLE_COURSES.find(x => x.code === code);
+    const finalName = foundInAvailable ? foundInAvailable.name : name;
+    const finalHours = foundInAvailable ? foundInAvailable.hours : hours;
+    courses.push({
+      code: code, name: finalName, hours: finalHours,
+      attemptType: tr.querySelector('.c-type').value,
+      grade: tr.querySelector('.c-grade').value || ''
+    });
+  });
+  const payload = {
+    nationalId: CURRENT_ID,
+    academicYear: document.getElementById('academicYear').value,
+    semesterTerm: document.getElementById('semesterTerm').value,
+    courses: courses,
+    isUpdate: IS_UPDATE_MODE
+  };
+  if (!payload.academicYear) return showMsg('enrollMsg', 'اختر العام الأكاديمي', false);
+  apiCall('saveSemester', { payload: payload }).then(res => {
+    showMsg('enrollMsg', res.msg, res.ok);
+    if (res.ok) {
+      hideSemesterSelection();
+      loadDashboard();
+      loadHistory();
+    }
+  });
+}
+
+function loadHistory() {
+  apiCall('getSemesterHistory', { id: CURRENT_ID }).then(list => {
+    const tbody = document.getElementById('historyBody');
+    const card = document.getElementById('historyCard');
+    tbody.innerHTML = '';
+    if (!list || !list.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:#888;padding:20px;">لا يوجد سجل درجات بعد</td></tr>';
+      card.classList.remove('hidden');
+      return;
+    }
+    const termLabels = { fall: 'الخريفي', spring: 'الربيعي', summer: 'الصيفي' };
+    list.forEach(s => {
+      const typeLabel = termLabels[s.semesterTerm] || s.semesterTerm || '—';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${s.semesterId}</b></td>
+        <td>${typeLabel}</td>
+        <td>${s.courseCount}</td>
+        <td>${s.semesterCredits}</td>
+        <td style="color:${gpaColor(s.semesterGPA)};font-weight:bold;">${s.semesterGPA.toFixed(2)}</td>
+        <td style="font-weight:bold; color:#0d47a1;">${s.semesterPoints.toFixed(2)}</td>
+        <td style="color:${gpaColor(s.cumulativeGPA)};font-weight:bold;">${s.cumulativeGPA.toFixed(2)}</td>
+        <td><button class="secondary" style="width:auto;padding:5px 10px;font-size:12px;margin:0;" onclick="openDetails('${s.semesterId}')">تفاصيل</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    const last = list[list.length - 1];
+    const summary = document.createElement('tr');
+    summary.style.background = '#f0f7ff';
+    summary.innerHTML = `
+      <td colspan="3"><b>الإجمالي</b></td>
+      <td><b>${last.cumulativeCredits}</b></td>
+      <td>—</td>
+      <td style="font-weight:bold; color:#0d47a1; font-size:15px;">${last.cumulativePoints.toFixed(2)}</td>
+      <td style="color:${gpaColor(last.cumulativeGPA)};font-weight:bold;font-size:15px;">${last.cumulativeGPA.toFixed(2)}</td>
+      <td></td>
+    `;
+    tbody.appendChild(summary);
+    card.classList.remove('hidden');
+  });
+}
+
+function openDetails(semesterId) {
+  apiCall('getSemesterDetails', { id: CURRENT_ID, semesterId: semesterId }).then(courses => {
+    document.getElementById('detailTitle').textContent = 'تفاصيل الفصل: ' + semesterId;
+    const tbody = document.getElementById('detailBody');
+    tbody.innerHTML = '';
+    if (!courses.length) { tbody.innerHTML = '<tr><td colspan="7">لا توجد بيانات</td></tr>'; } 
+    else {
+      const typeLabels = { 'first': 'أول مرة', 'improvement': 'تحسين', 'repeat_failure': 'إعادة رسوب' };
+      courses.forEach(c => {
+        let gradeOptionsHtml = '<option value="">— بدون —</option>';
+        let found = false;
+        AVAILABLE_GRADES.forEach(g => {
+          if (g.grade === c.grade) found = true;
+          gradeOptionsHtml += `<option value="${g.grade}" ${g.grade === c.grade ? 'selected' : ''}>${g.grade} (${g.points})</option>`;
+        });
+        if (!found && c.grade) { gradeOptionsHtml += `<option value="${c.grade}" selected>${c.grade} (${c.points})</option>`; }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${c.code}</td>
+          <td style="text-align:right;">${c.name}</td>
+          <td>${c.hours}</td>
+          <td><select class="detail-grade" data-code="${c.code}" data-sem="${semesterId}" onchange="changeGrade(this)">${gradeOptionsHtml}</select></td>
+          <td class="pts-cell" data-code="${c.code}">${c.hasGrade ? c.points.toFixed(2) : '—'}</td>
+          <td class="qp-cell" data-code="${c.code}" style="font-weight:bold; color:#0d47a1;">${c.hasGrade ? c.qualityPoints.toFixed(2) : '—'}</td>
+          <td>${typeLabels[c.attemptType] || c.attemptType}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+    document.getElementById('detailModal').style.display = 'block';
+  });
+}
+
+function changeGrade(sel) {
+  const code = sel.dataset.code;
+  const sem = sel.dataset.sem;
+  const grade = sel.value;
+  apiCall('updateGrade', { id: CURRENT_ID, semesterId: sem, courseCode: code, grade: grade }).then(res => {
+    if (!res.ok) { alert(res.msg); return; }
+    let newPoints = 0;
+    if (grade) {
+      const found = AVAILABLE_GRADES.find(g => g.grade === grade);
+      if (found) newPoints = found.points;
+    }
+    const cell = document.querySelector(`.pts-cell[data-code="${code}"]`);
+    if (cell) cell.textContent = grade ? newPoints.toFixed(2) : '—';
+    const hoursText = sel.closest('tr').children[2].textContent;
+    const hours = isNaN(hoursText) ? 0 : Number(hoursText);
+    const qpCell = document.querySelector(`.qp-cell[data-code="${code}"]`);
+    if (qpCell) qpCell.textContent = grade ? (newPoints * hours).toFixed(2) : '—';
+    loadDashboard();
+    loadHistory();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', populateAcademicYears);
+</script>
+</body>
+</html>
