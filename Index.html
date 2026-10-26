@@ -1,1 +1,1299 @@
 
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <title>جامعة الفيوم الأهلية - منصة الطالب</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 40px; }
+    .header-box { background: linear-gradient(135deg, #0d6efd, #0a58ca); color: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(13,110,253,0.2); }
+    .main-card { border-radius: 16px; border: none; box-shadow: 0 6px 20px rgba(0,0,0,0.06); background: #ffffff; }
+    .course-checkbox-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px; padding: 10px 14px; transition: all 0.2s; height: 100%; }
+    .course-checkbox-box:hover { background: #e7f1ff; border-color: #86b7fe; }
+    .hours-counter-badge { font-size: 1.1rem; padding: 8px 16px; border-radius: 20px; }
+    .progress-circle-box { position: relative; width: 130px; height: 130px; margin: 15px auto; }
+    .progress-circle-svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+    .circle-bg { fill: none; stroke: #e9ecef; stroke-width: 10; }
+    .circle-progress { fill: none; stroke: #0d6efd; stroke-width: 10; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.2s ease; }
+    .circle-percent-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.4rem; font-weight: bold; color: #0d6efd; }
+    .level-group-title { background: #eef4ff; border-radius: 8px; padding: 6px 12px; font-weight: bold; color: #0a58ca; margin: 12px 0 8px 0; }
+    .level-section-title { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; background: linear-gradient(135deg, #eef4ff, #dbe8ff); margin-bottom: 12px; font-weight: bold; color: #0a58ca; }
+    .doctor-badge-inline { font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; }
+    .course-accordion-item { border: 1px solid #e9ecef; border-radius: 10px; margin-bottom: 10px; overflow: hidden; background: #fff; transition: all 0.2s; }
+    .course-accordion-item:hover { border-color: #86b7fe; box-shadow: 0 2px 10px rgba(13,110,253,0.08); }
+    .course-accordion-header { padding: 14px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #0a58ca; background: #fff; transition: all 0.2s; user-select: none; }
+    .course-accordion-header:hover { background: #f0f7ff; }
+    .course-accordion-header .course-title { font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .course-accordion-header .course-icon { color: #f0ad4e; transition: transform 0.3s; font-size: 0.85rem; display: inline-block; }
+    .course-accordion-item.open .course-accordion-header { background: #e7f1ff; border-bottom: 1px solid #d0e3ff; }
+    .course-accordion-item.open .course-icon { transform: rotate(90deg); }
+    .course-accordion-body { display: none; padding: 14px 18px; background: #fafbfc; }
+    .course-accordion-item.open .course-accordion-body { display: block; animation: slideDown 0.25s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .course-meta-info { font-size: 0.78rem; color: #6c757d; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #e9ecef; }
+    .course-files-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .course-files-grid a { font-size: 0.82rem; padding: 6px 12px; border-radius: 8px; }
+    .level-checkbox-box { background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 10px; padding: 10px; transition: all 0.2s; cursor: pointer; }
+    .level-checkbox-box:hover { background: #e7f1ff; border-color: #86b7fe; }
+    .level-checkbox-box input:checked + label { color: #0a58ca; }
+  </style>
+</head>
+<body>
+
+  <div class="container mt-4" style="max-width: 1100px;">
+    
+    <div class="header-box text-center">
+      <h3 class="fw-bold mb-1">🏛️ جامعة الفيوم الأهلية</h3>
+      <h5 class="fw-normal mb-0">برنامج الكيمياء والميكروبيولوجي - منصة الطالب</h5>
+    </div>
+
+    <!-- 1. الرئيسية -->
+    <div id="homeScreen" class="main-card p-5 text-center">
+      <h4 class="fw-bold text-dark mb-4">أهلاً بك في منصة الطالب</h4>
+      <div class="row g-4 justify-content-center">
+        <div class="col-md-6">
+          <button class="btn btn-primary w-100 py-3 fs-5 fw-bold rounded-3" onclick="showScreen('preRegisterScreen')">📝 تسجيل حساب جديد</button>
+        </div>
+        <div class="col-md-6">
+          <button class="btn btn-outline-success w-100 py-3 fs-5 fw-bold rounded-3" onclick="showScreen('loginScreen')">🔑 الدخول على المنصة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. التحقق من الرقم القومي -->
+    <div id="preRegisterScreen" class="main-card p-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h5 class="fw-bold text-primary m-0">🔍 التحقق من الرقم القومي</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="showScreen('homeScreen')">⬅️ العودة</button>
+      </div>
+      <div class="alert alert-info py-2 small">
+        💡 <strong>ملاحظة:</strong> لازم رقمك القومي يكون مسجل عند شؤون الطلاب أولاً.
+      </div>
+      <form onsubmit="handlePreRegister(event)">
+        <div class="mb-4">
+          <label class="form-label fw-bold fs-5">أدخل رقمك القومي (14 رقم):</label>
+          <input type="text" id="preRegNationalId" class="form-control form-control-lg" 
+                 maxlength="14" pattern="\d{14}" placeholder="14 رقم قومي" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 py-2 fs-5" id="preRegBtn">تحقق واستمر</button>
+      </form>
+      <div id="preRegAlert" class="alert d-none mt-3"></div>
+    </div>
+
+    <!-- 3. تسجيل البيانات (إكمال الحساب) -->
+    <div id="registerScreen" class="main-card p-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h5 class="fw-bold text-primary m-0">إكمال بيانات الحساب</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="showScreen('homeScreen')">⬅️ العودة</button>
+      </div>
+
+      <form id="stuRegForm" onsubmit="handleStudentReg(event)">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-bold">الاسم رباعياً (بالعربي):</label>
+            <input type="text" id="stuFullName" class="form-control" 
+                   placeholder="مثال: محمد أحمد علي حسن" 
+                   maxlength="60" required autocomplete="off"
+                   oninput="filterArabicOnlyInput(this)"
+                   onpaste="handleArabicPaste(event, this)"
+                   onkeypress="return blockNonArabicKey(event)">
+            <small class="text-muted">✍️ الاسم بالعربية فقط، 4 أجزاء</small>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-bold">الرقم القومي (ثابت):</label>
+            <input type="text" id="stuNationalId" class="form-control" maxlength="14" readonly required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label fw-bold fs-6 text-primary">📚 اختر المستويات التي ترغب في تسجيل مقررات فيها (يمكنك اختيار أكثر من مستوى):</label>
+            <div class="row g-2" id="levelsCheckboxContainer">
+              <div class="col-6 col-md-3">
+                <div class="level-checkbox-box">
+                  <div class="form-check">
+                    <input class="form-check-input level-checkbox" type="checkbox" value="المستوى الأول" id="lvl1" onchange="renderProgramCoursesForReg()">
+                    <label class="form-check-label fw-bold" for="lvl1">📘 المستوى الأول</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="level-checkbox-box">
+                  <div class="form-check">
+                    <input class="form-check-input level-checkbox" type="checkbox" value="المستوى الثاني" id="lvl2" onchange="renderProgramCoursesForReg()">
+                    <label class="form-check-label fw-bold" for="lvl2">📗 المستوى الثاني</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="level-checkbox-box">
+                  <div class="form-check">
+                    <input class="form-check-input level-checkbox" type="checkbox" value="المستوى الثالث" id="lvl3" onchange="renderProgramCoursesForReg()">
+                    <label class="form-check-label fw-bold" for="lvl3">📙 المستوى الثالث</label>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="level-checkbox-box">
+                  <div class="form-check">
+                    <input class="form-check-input level-checkbox" type="checkbox" value="المستوى الرابع" id="lvl4" onchange="renderProgramCoursesForReg()">
+                    <label class="form-check-label fw-bold" for="lvl4">📕 المستوى الرابع</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label fw-bold">رقم الهاتف:</label>
+            <input type="tel" id="stuPhone" class="form-control" 
+                   maxlength="12" minlength="12" 
+                   placeholder="20xxxxxxxxxx" 
+                   title="لازم يبدأ بـ 20 ويكون 12 رقم"
+                   oninput="formatPhoneInput(this)"
+                   required>
+            <small class="text-muted">📱 يبدأ بـ 20 ويكون 12 رقم</small>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">البريد الإلكتروني:</label>
+            <input type="email" id="stuEmail" class="form-control" placeholder="example@mail.com" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">رقم هاتف ولي الأمر:</label>
+            <input type="tel" id="stuGuardianPhone" class="form-control" 
+                   maxlength="12" minlength="12" 
+                   placeholder="20xxxxxxxxxx" 
+                   title="لازم يبدأ بـ 20 ويكون 12 رقم"
+                   oninput="formatPhoneInput(this)"
+                   required>
+            <small class="text-muted">📱 يبدأ بـ 20 ويكون 12 رقم</small>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">المحافظة:</label>
+            <select id="stuGovernorate" class="form-select" required>
+              <option value="">اختر المحافظة...</option>
+              <option value="القاهرة">القاهرة</option>
+              <option value="الجيزة">الجيزة</option>
+              <option value="الإسكندرية">الإسكندرية</option>
+              <option value="الدقهلية">الدقهلية</option>
+              <option value="الشرقية">الشرقية</option>
+              <option value="المنوفية">المنوفية</option>
+              <option value="القليوبية">القليوبية</option>
+              <option value="البحيرة">البحيرة</option>
+              <option value="الغربية">الغربية</option>
+              <option value="بورسعيد">بورسعيد</option>
+              <option value="دمياط">دمياط</option>
+              <option value="الإسماعيلية">الإسماعيلية</option>
+              <option value="السويس">السويس</option>
+              <option value="كفر الشيخ">كفر الشيخ</option>
+              <option value="الفيوم">الفيوم</option>
+              <option value="بني سويف">بني سويف</option>
+              <option value="المنيا">المنيا</option>
+              <option value="أسيوط">أسيوط</option>
+              <option value="سوهاج">سوهاج</option>
+              <option value="قنا">قنا</option>
+              <option value="الأقصر">الأقصر</option>
+              <option value="أسوان">أسوان</option>
+              <option value="البحر الأحمر">البحر الأحمر</option>
+              <option value="الوادي الجديد">الوادي الجديد</option>
+              <option value="مطروح">مطروح</option>
+              <option value="شمال سيناء">شمال سيناء</option>
+              <option value="جنوب سيناء">جنوب سيناء</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">المركز / القسم:</label>
+            <input type="text" id="stuCenter" class="form-control" placeholder="مثال: مركز الفيوم" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">القرية / الحي:</label>
+            <input type="text" id="stuVillage" class="form-control" placeholder="مثال: قرية سنهور" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-bold">صورة بطاقة الرقم القومي:</label>
+            <input type="file" id="stuIdImage" class="form-control" accept="image/*" required>
+          </div>
+
+          <div class="col-12 mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label fw-bold m-0 fs-6 text-primary">المقررات المتاحة (بحد أقصى 18 ساعة):</label>
+              <span class="badge bg-secondary hours-counter-badge" id="regHoursBadge">0 / 18 ساعة</span>
+            </div>
+            <div id="stuRegCoursesList" class="p-3 border rounded bg-light">
+              <span class="text-muted small">اختر مستوى واحد على الأقل لعرض المقررات...</span>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 mt-4 py-2 fs-5" id="stuRegBtn">حفظ البيانات والتسجيل</button>
+      </form>
+
+      <div id="regAlert" class="alert d-none mt-3"></div>
+    </div>
+
+    <!-- 4. تسجيل الدخول -->
+    <div id="loginScreen" class="main-card p-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold text-success m-0">تسجيل الدخول</h5>
+        <button class="btn btn-outline-secondary btn-sm" onclick="showScreen('homeScreen')">⬅️ العودة للرئيسية</button>
+      </div>
+      <form onsubmit="handleLogin(event)">
+        <div class="mb-4">
+          <label class="form-label fw-bold fs-5">أدخل الرقم القومي المسجل:</label>
+          <input type="text" id="loginNationalId" class="form-control form-control-lg" maxlength="14" pattern="\d{14}" placeholder="14 رقم قومي" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100 py-2 fs-5" id="loginBtn">دخول</button>
+      </form>
+      <div id="loginAlert" class="alert d-none mt-3"></div>
+    </div>
+
+    <!-- 5. واجهة الطالب -->
+    <div id="studentDashboard" class="main-card p-4 d-none">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom flex-wrap">
+        <div>
+          <h4 class="fw-bold text-primary mb-1" id="stuWelcome"></h4>
+          <span class="badge bg-info text-dark p-2 me-2" id="stuDetails"></span>
+          <span class="badge bg-success p-2" id="stuHoursBadge"></span>
+        </div>
+        <div class="mt-2 mt-md-0">
+          <button class="btn btn-outline-info btn-sm me-2" onclick="openStudentProfileModal()">👤 بياناتي</button>
+          <button class="btn btn-outline-warning btn-sm me-2" onclick="openUpdateCoursesModal()">📝 طلب تعديل المقررات</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="logout()">خروج</button>
+        </div>
+      </div>
+      <h5 class="fw-bold text-secondary mb-3">📚 المقررات المسجلة لديك:</h5>
+      <div id="studentCoursesList"></div>
+    </div>
+
+  </div>
+
+  <!-- Modal تعديل المقررات -->
+  <div class="modal fade" id="updateCoursesModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-warning">
+          <h5 class="modal-title fw-bold">📝 طلب تعديل المقررات</h5>
+          <span class="badge bg-dark ms-auto me-3 hours-counter-badge" id="editHoursBadge">0 / 18 ساعة</span>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info py-2 small mb-3">
+            💡 <strong>ملاحظة:</strong> أي تعديل على المقررات لازم يوافق عليه الأدمن الأول.
+          </div>
+          <div id="editCoursesList">جاري جلب المقررات...</div>
+          <div id="editAlert" class="alert d-none mt-2"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-warning fw-bold" id="submitCourseChangeBtn" onclick="submitCourseChangeRequest()">
+            📩 إرسال طلب التعديل للأدمن
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal مؤشر التقدم -->
+  <div class="modal fade" id="circularProgressModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content text-center p-4 rounded-4 shadow">
+        <h6 class="fw-bold text-primary mb-2" id="uploadStatusTitle">جاري رفع الملف...</h6>
+        <div class="progress-circle-box">
+          <svg class="progress-circle-svg" viewBox="0 0 100 100">
+            <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
+            <circle class="circle-progress" id="circleProgressBar" cx="50" cy="50" r="45"></circle>
+          </svg>
+          <div class="circle-percent-text" id="circlePercentText">0%</div>
+        </div>
+        <p class="text-muted small mb-0" id="uploadStatusSub">يرجى عدم إغلاق الصفحة...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal تعديل بيانات الطالب -->
+  <div class="modal fade" id="studentProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold">⚙️ تعديل بياناتي</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info py-2 small mb-3">💡 أي تعديل هيتبعت للإدارة للمراجعة.</div>
+          <form id="stuProfileForm" onsubmit="saveStudentProfile(event)">
+            <div class="row g-3">
+              <div class="col-md-12">
+                <label class="form-label fw-bold">الاسم الرباعي:</label>
+                <input type="text" id="editStuName" class="form-control" required autocomplete="off"
+                       oninput="filterArabicOnlyInput(this)"
+                       onpaste="handleArabicPaste(event, this)"
+                       onkeypress="return blockNonArabicKey(event)">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">الرقم القومي (ثابت):</label>
+                <input type="text" id="editStuNationalId" class="form-control" disabled>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">المستوى (ثابت):</label>
+                <input type="text" id="editStuLevel" class="form-control" disabled>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">رقم الهاتف:</label>
+                <input type="tel" id="editStuPhone" class="form-control" 
+                       maxlength="12" minlength="12" 
+                       placeholder="20xxxxxxxxxx" 
+                       title="لازم يبدأ بـ 20 ويكون 12 رقم"
+                       oninput="formatPhoneInput(this)"
+                       required>
+                <small class="text-muted">📱 يبدأ بـ 20 ويكون 12 رقم</small>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">رقم هاتف ولي الأمر:</label>
+                <input type="tel" id="editStuGuardianPhone" class="form-control" 
+                       maxlength="12" minlength="12" 
+                       placeholder="20xxxxxxxxxx" 
+                       title="لازم يبدأ بـ 20 ويكون 12 رقم"
+                       oninput="formatPhoneInput(this)"
+                       required>
+                <small class="text-muted">📱 يبدأ بـ 20 ويكون 12 رقم</small>
+              </div>
+              <div class="col-md-12">
+                <label class="form-label fw-bold">البريد الإلكتروني:</label>
+                <input type="email" id="editStuEmail" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">المحافظة:</label>
+                <select id="editStuGovernorate" class="form-select" required>
+                  <option value="">اختر...</option>
+                  <option value="القاهرة">القاهرة</option>
+                  <option value="الجيزة">الجيزة</option>
+                  <option value="الإسكندرية">الإسكندرية</option>
+                  <option value="الدقهلية">الدقهلية</option>
+                  <option value="الشرقية">الشرقية</option>
+                  <option value="المنوفية">المنوفية</option>
+                  <option value="القليوبية">القليوبية</option>
+                  <option value="البحيرة">البحيرة</option>
+                  <option value="الغربية">الغربية</option>
+                  <option value="بورسعيد">بورسعيد</option>
+                  <option value="دمياط">دمياط</option>
+                  <option value="الإسماعيلية">الإسماعيلية</option>
+                  <option value="السويس">السويس</option>
+                  <option value="كفر الشيخ">كفر الشيخ</option>
+                  <option value="الفيوم">الفيوم</option>
+                  <option value="بني سويف">بني سويف</option>
+                  <option value="المنيا">المنيا</option>
+                  <option value="أسيوط">أسيوط</option>
+                  <option value="سوهاج">سوهاج</option>
+                  <option value="قنا">قنا</option>
+                  <option value="الأقصر">الأقصر</option>
+                  <option value="أسوان">أسوان</option>
+                  <option value="البحر الأحمر">البحر الأحمر</option>
+                  <option value="الوادي الجديد">الوادي الجديد</option>
+                  <option value="مطروح">مطروح</option>
+                  <option value="شمال سيناء">شمال سيناء</option>
+                  <option value="جنوب سيناء">جنوب سيناء</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">المركز:</label>
+                <input type="text" id="editStuCenter" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">القرية / الحي:</label>
+                <input type="text" id="editStuVillage" class="form-control" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold">صورة بطاقة جديدة (اختياري):</label>
+                <input type="file" id="editStuImage" class="form-control" accept="image/*">
+              </div>
+              <div class="col-12"><div id="editStuProfileAlert" class="alert d-none"></div></div>
+            </div>
+            <div class="text-end mt-3">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+              <button type="submit" class="btn btn-primary px-4" id="editStuProfileBtn">إرسال طلب التعديل</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+    // ═══════════════════════════════════════════
+    // 🌐 API Configuration — ضع رابط الـ /exec هنا
+    // ═══════════════════════════════════════════
+    const API_URL = 'ضع_رابط_الـ_exec_هنا';
+
+    async function apiCall(action, params) {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ action: action, ...(params || {}) })
+        });
+        return await response.json();
+      } catch (err) {
+        return { success: false, message: 'خطأ في الاتصال: ' + err.message };
+      }
+    }
+
+    let currentUser = null;
+    let programCourses = [];
+
+    window.onload = function() {
+      loadProgramCoursesFromServer();
+    };
+
+    function loadProgramCoursesFromServer() {
+      apiCall('getProgramCourses').then(res => {
+        if (res.success && res.courses) programCourses = res.courses;
+      });
+    }
+
+    function showScreen(screenId) {
+      ['homeScreen', 'preRegisterScreen', 'registerScreen', 'loginScreen', 'studentDashboard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('d-none');
+      });
+      const target = document.getElementById(screenId);
+      if (target) target.classList.remove('d-none');
+    }
+
+    function formatPhoneInput(input) {
+      let val = input.value.replace(/\D/g, '');
+      if (val.length > 0 && !val.startsWith('20')) {
+        if (val.startsWith('0') || val.startsWith('1')) {
+          val = '20' + val.substring(1);
+        } else {
+          val = '20' + val;
+        }
+      }
+      if (val.length > 12) val = val.substring(0, 12);
+      input.value = val;
+    }
+
+    const ARABIC_CHARS_ONLY_REGEX = /[^\u0621-\u064A\u064B-\u0652\u0670\u0671\s]/g;
+
+    function filterArabicOnlyInput(input) {
+      const originalValue = input.value;
+      let filtered = originalValue.replace(ARABIC_CHARS_ONLY_REGEX, '');
+      filtered = filtered.replace(/\s{2,}/g, ' ');
+      if (filtered.startsWith(' ')) filtered = filtered.replace(/^\s+/, '');
+      if (filtered !== originalValue) {
+        const cursorPos = input.selectionStart;
+        const diff = originalValue.length - filtered.length;
+        input.value = filtered;
+        try {
+          const newPos = Math.max(0, cursorPos - diff);
+          input.setSelectionRange(newPos, newPos);
+        } catch(e) {}
+      }
+    }
+
+    function blockNonArabicKey(event) {
+      const e = event || window.event;
+      const charCode = e.which || e.keyCode;
+      const char = String.fromCharCode(charCode);
+      if (char === ' ') return true;
+      if (charCode < 32 || charCode === 127) return true;
+      if (e.ctrlKey || e.metaKey || e.altKey) return true;
+      if (/[\u0621-\u064A\u064B-\u0652\u0670\u0671]/.test(char)) return true;
+      e.preventDefault();
+      return false;
+    }
+
+    function handleArabicPaste(event, input) {
+      event.preventDefault();
+      const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+      const filtered = pastedText.replace(ARABIC_CHARS_ONLY_REGEX, '').replace(/\s{2,}/g, ' ');
+      const currentValue = input.value;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      let newValue = currentValue.substring(0, start) + filtered + currentValue.substring(end);
+      newValue = newValue.replace(ARABIC_CHARS_ONLY_REGEX, '').replace(/\s{2,}/g, ' ');
+      input.value = newValue;
+      filterArabicOnlyInput(input);
+    }
+
+    function isArabicFourPartName(name) {
+      if (!name) return false;
+      const cleaned = name.toString().trim().replace(/\s+/g, ' ');
+      const arabicOnlyRegex = /^[\u0621-\u064A\u064B-\u0652\u0670\u0671][\u0621-\u064A\u064B-\u0652\u0670\u0671\s]*$/;
+      if (!arabicOnlyRegex.test(cleaned)) return false;
+      if (/[0-9A-Za-z!@#$%^&*()_+=\-\[\]{};:'",.<>\/?\\|`~]/.test(cleaned)) return false;
+      const parts = cleaned.split(' ').filter(p => p.length > 0);
+      if (parts.length !== 4) return false;
+      for (let p of parts) { if (p.length < 2) return false; }
+      return true;
+    }
+
+    function validateNameInput(inputId, alertDivId) {
+      const input = document.getElementById(inputId);
+      const alertDiv = document.getElementById(alertDivId);
+      const value = input.value;
+      if (!isArabicFourPartName(value)) {
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ الاسم يجب أن يكون بالعربية فقط ومكوّن من 4 أجزاء.';
+        input.classList.add('is-invalid');
+        input.classList.remove('is-valid');
+        input.focus();
+        return false;
+      }
+      input.classList.remove('is-invalid');
+      input.classList.add('is-valid');
+      return true;
+    }
+
+    function getCourseColClass(level) {
+      if (!level) return 'col-6 col-md-4';
+      var lvl = level.toString();
+      if (lvl.indexOf('الأول') !== -1 || lvl.indexOf('الاول') !== -1) return 'col-6 col-md-4';
+      if (lvl.indexOf('الثاني') !== -1) return 'col-6 col-md-3';
+      if (lvl.indexOf('الثالث') !== -1) return 'col-6 col-md-4';
+      if (lvl.indexOf('الرابع') !== -1) return 'col-6 col-md-3';
+      return 'col-6 col-md-4';
+    }
+
+    function groupCoursesByLevel(courses) {
+      const groups = {};
+      courses.forEach(c => {
+        const lvl = (c.level && c.level.toString().trim()) ? c.level.toString().trim() : 'غير محدد';
+        if (!groups[lvl]) groups[lvl] = [];
+        groups[lvl].push(c);
+      });
+      const levelOrder = ['المستوى الأول', 'المستوى الثاني', 'المستوى الثالث', 'المستوى الرابع'];
+      const sortedLevels = Object.keys(groups).sort((a, b) => {
+        const ia = levelOrder.indexOf(a);
+        const ib = levelOrder.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+      return { groups, sortedLevels };
+    }
+
+    function buildCoursesHtml(courses, checkboxClass, checkedList, idPrefix) {
+      const { groups, sortedLevels } = groupCoursesByLevel(courses);
+      let html = '';
+      sortedLevels.forEach(lvl => {
+        const safeLvlId = lvl.replace(/[^\u0600-\u06FFa-zA-Z0-9]/g, '_');
+        const colClass = getCourseColClass(lvl);
+        html += `<div class="level-group-title">📘 ${lvl}</div>`;
+        html += `<div class="row g-2 mb-3">`;
+        html += groups[lvl].map((c, i) => {
+          const checked = (checkedList && checkedList.includes(c.name)) ? 'checked' : '';
+          const id = `${idPrefix}_${safeLvlId}_${i}`;
+          return `
+            <div class="${colClass}">
+              <div class="form-check course-checkbox-box">
+                <input class="form-check-input ${checkboxClass}" type="checkbox"
+                       data-hours="${c.hours}" value="${c.name}" id="${id}"
+                       ${checked} onchange="checkHoursLimit('${idPrefix}', this)">
+                <label class="form-check-label fw-bold text-dark d-flex justify-content-between align-items-center" 
+                       for="${id}" style="cursor:pointer; width:100%;">
+                  <span>${c.name}</span>
+                  <span class="badge bg-secondary">${c.hours} س</span>
+                </label>
+              </div>
+            </div>`;
+        }).join('');
+        html += `</div>`;
+      });
+      return html;
+    }
+
+    function renderProgramCoursesForReg() {
+      const container = document.getElementById('stuRegCoursesList');
+      const selectedLevels = [];
+      document.querySelectorAll('.level-checkbox:checked').forEach(cb => {
+        selectedLevels.push(cb.value);
+      });
+      if (selectedLevels.length === 0) {
+        container.innerHTML = '<span class="text-muted small">اختر مستوى واحد على الأقل لعرض المقررات...</span>';
+        checkHoursLimit('reg');
+        return;
+      }
+      if (programCourses.length === 0) {
+        container.innerHTML = '<span class="text-muted small">جاري تحميل دليل المقررات...</span>';
+        apiCall('getProgramCourses').then(res => {
+          if (res.success) { programCourses = res.courses; renderProgramCoursesForReg(); }
+        });
+        return;
+      }
+      const filteredCourses = programCourses.filter(c => selectedLevels.includes(c.level));
+      if (filteredCourses.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning py-2 mb-0">⚠️ لا توجد مقررات متاحة في المستويات المختارة.</div>';
+        checkHoursLimit('reg');
+        return;
+      }
+      container.innerHTML = '<div class="alert alert-info py-2 small mb-2">💡 يمكنك اختيار مقررات من أي مستوى (بحد أقصى 18 ساعة).</div>' + 
+                            buildCoursesHtml(filteredCourses, 'reg-stu-course', [], 'reg');
+      checkHoursLimit('reg');
+    }
+
+    function checkHoursLimit(type, changedCheckbox = null) {
+      const selector = type === 'reg' ? '.reg-stu-course:checked' : '.edit-stu-course:checked';
+      const badgeId = type === 'reg' ? 'regHoursBadge' : 'editHoursBadge';
+      let total = 0;
+      document.querySelectorAll(selector).forEach(cb => { total += parseInt(cb.getAttribute('data-hours') || 0); });
+      if (total > 18) {
+        alert('عفواً! تجاوزت الحد الأقصى (18 ساعة).');
+        if (changedCheckbox) changedCheckbox.checked = false;
+        total = 0;
+        document.querySelectorAll(selector).forEach(cb => { total += parseInt(cb.getAttribute('data-hours') || 0); });
+      }
+      const badge = document.getElementById(badgeId);
+      if (badge) {
+        badge.innerText = `${total} / 18 ساعة`;
+        badge.className = total === 18 ? 'badge bg-success hours-counter-badge' : 'badge bg-primary hours-counter-badge';
+      }
+      return total;
+    }
+
+    function handlePreRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('preRegBtn');
+      const alertDiv = document.getElementById('preRegAlert');
+      const nationalId = document.getElementById('preRegNationalId').value.trim();
+      btn.disabled = true;
+      btn.innerText = 'جاري التحقق...';
+      alertDiv.className = 'd-none';
+      
+      apiCall('checkStudentPreRegistered', { nationalId: nationalId }).then(res => {
+        btn.disabled = false;
+        btn.innerText = 'تحقق واستمر';
+        if (res.success && res.preRegistered) {
+          if (res.isCompleted) {
+            alertDiv.className = 'alert alert-info mt-3 d-block';
+            alertDiv.innerText = '✅ حسابك مكتمل بالفعل. جاري تحويلك لتسجيل الدخول...';
+            setTimeout(() => {
+              document.getElementById('loginNationalId').value = nationalId;
+              showScreen('loginScreen');
+            }, 1500);
+            return;
+          }
+          window._preRegStudent = res.student;
+          fillRegistrationForm(res.student);
+          document.getElementById('stuNationalId').value = res.student.nationalId;
+          document.getElementById('stuNationalId').readOnly = true;
+          document.getElementById('regAlert').className = 'd-none';
+          showScreen('registerScreen');
+        } else {
+          alertDiv.className = 'alert alert-danger mt-3 d-block';
+          alertDiv.innerText = res.message;
+        }
+      });
+    }
+
+    function fillRegistrationForm(student) {
+      if (student.fullName) document.getElementById('stuFullName').value = student.fullName;
+      if (student.phone) document.getElementById('stuPhone').value = student.phone;
+      if (student.email) document.getElementById('stuEmail').value = student.email;
+      if (student.guardianPhone) document.getElementById('stuGuardianPhone').value = student.guardianPhone;
+      if (student.governorate) document.getElementById('stuGovernorate').value = student.governorate;
+      if (student.center) document.getElementById('stuCenter').value = student.center;
+      if (student.village) document.getElementById('stuVillage').value = student.village;
+      
+      document.querySelectorAll('.level-checkbox').forEach(cb => cb.checked = false);
+      
+      if (student.registeredCourses && student.registeredCourses.length > 0) {
+        const levelsSet = new Set();
+        student.registeredCourses.forEach(courseName => {
+          const course = programCourses.find(c => c.name === courseName);
+          if (course && course.level) levelsSet.add(course.level);
+        });
+        levelsSet.forEach(lvl => {
+          document.querySelectorAll('.level-checkbox').forEach(cb => {
+            if (cb.value === lvl) cb.checked = true;
+          });
+        });
+      } else if (student.level) {
+        const levelsArr = student.level.split('،').map(s => s.trim());
+        levelsArr.forEach(lvl => {
+          document.querySelectorAll('.level-checkbox').forEach(cb => {
+            if (cb.value === lvl) cb.checked = true;
+          });
+        });
+      }
+      renderProgramCoursesForReg();
+    }
+
+    function handleStudentReg(e) {
+      e.preventDefault();
+      const btn = document.getElementById('stuRegBtn');
+      const alertDiv = document.getElementById('regAlert');
+      
+      const phone = document.getElementById('stuPhone').value.trim();
+      if (!/^20\d{10}$/.test(phone)) {
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ رقم الهاتف يجب أن يبدأ بـ 20 ويكون 12 رقم.';
+        document.getElementById('stuPhone').focus();
+        return;
+      }
+      
+      const guardianPhone = document.getElementById('stuGuardianPhone').value.trim();
+      if (!/^20\d{10}$/.test(guardianPhone)) {
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ رقم ولي الأمر يجب أن يبدأ بـ 20 ويكون 12 رقم.';
+        document.getElementById('stuGuardianPhone').focus();
+        return;
+      }
+      
+      if (!validateNameInput('stuFullName', 'regAlert')) return;
+      
+      const selectedCourses = [];
+      let totalHours = 0;
+      document.querySelectorAll('.reg-stu-course:checked').forEach(cb => {
+        selectedCourses.push(cb.value);
+        totalHours += parseInt(cb.getAttribute('data-hours') || 0);
+      });
+      
+      const selectedLevels = [];
+      document.querySelectorAll('.level-checkbox:checked').forEach(cb => {
+        selectedLevels.push(cb.value);
+      });
+      
+      if (selectedLevels.length === 0) {
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ يرجى اختيار مستوى واحد على الأقل.';
+        return;
+      }
+      if (selectedCourses.length === 0) { 
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ يرجى اختيار مقرر واحد على الأقل.';
+        return; 
+      }
+      if (totalHours > 18) { 
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ لا يمكن التسجيل بأكثر من 18 ساعة.';
+        return; 
+      }
+      
+      const imageInput = document.getElementById('stuIdImage');
+      if (!imageInput.files || imageInput.files.length === 0) {
+        alertDiv.className = 'alert alert-danger mt-3 d-block';
+        alertDiv.innerText = '⚠️ يرجى رفع صورة بطاقة الرقم القومي.';
+        return;
+      }
+      const imageFile = imageInput.files[0];
+      const nationalId = document.getElementById('stuNationalId').value;
+      
+      btn.disabled = true;
+      btn.innerText = 'جاري رفع الصورة...';
+      alertDiv.className = 'd-none';
+      
+      apiCall('createStudentImageUploadSession', {
+        fileName: imageFile.name,
+        mimeType: imageFile.type,
+        nationalId: nationalId
+      }).then(function(sr) {
+        if (!sr || !sr.success || !sr.uploadUrl) {
+          btn.disabled = false; btn.innerText = 'حفظ البيانات والتسجيل';
+          alertDiv.className = 'alert alert-danger mt-3 d-block';
+          alertDiv.innerText = '⚠️ فشل رفع الصورة: ' + (sr ? sr.message : 'خطأ');
+          return;
+        }
+        uploadFileToDrive(imageFile, sr.uploadUrl, function(p) {
+          btn.innerText = 'جاري رفع الصورة ' + Math.round(p) + '%...';
+        }).then(function() {
+          btn.innerText = 'جاري حفظ البيانات...';
+          const data = {
+            fullName: document.getElementById('stuFullName').value.trim().replace(/\s+/g, ' '),
+            level: selectedLevels.join('، '),
+            selectedLevels: selectedLevels,
+            selectedCourses: selectedCourses,
+            totalHours: totalHours,
+            phone: phone,
+            nationalId: nationalId,
+            email: document.getElementById('stuEmail').value,
+            guardianPhone: guardianPhone,
+            governorate: document.getElementById('stuGovernorate').value,
+            center: document.getElementById('stuCenter').value.trim(),
+            village: document.getElementById('stuVillage').value.trim(),
+            nationalIdImageName: sr.uniqueName
+          };
+          apiCall('completeStudentRegistration', { payload: data }).then(res => {
+            btn.disabled = false; btn.innerText = 'حفظ البيانات والتسجيل';
+            if (res.success) {
+              alertDiv.className = 'alert alert-success mt-3 d-block';
+              alertDiv.innerText = res.message;
+              setTimeout(() => showScreen('loginScreen'), 2000);
+            } else {
+              alertDiv.className = 'alert alert-danger mt-3 d-block';
+              alertDiv.innerText = res.message;
+            }
+          });
+        }).catch(function(err) {
+          btn.disabled = false; btn.innerText = 'حفظ البيانات والتسجيل';
+          alertDiv.className = 'alert alert-danger mt-3 d-block';
+          alertDiv.innerText = '⚠️ فشل رفع الصورة: ' + err.message;
+        });
+      });
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const alertDiv = document.getElementById('loginAlert');
+      const nationalId = document.getElementById('loginNationalId').value;
+      btn.disabled = true;
+      apiCall('loginStudent', { nationalId: nationalId }).then(res => {
+        btn.disabled = false;
+        if (res.success) {
+          alertDiv.className = 'd-none';
+          currentUser = res;
+          setupStudentDashboard(res.user);
+        } else if (res.needsCompletion) {
+          alertDiv.className = 'alert alert-warning mt-3 d-block';
+          alertDiv.innerText = res.message + ' جاري تحويلك...';
+          setTimeout(() => {
+            apiCall('checkStudentPreRegistered', { nationalId: nationalId }).then(pRes => {
+              if (pRes.success) {
+                window._preRegStudent = pRes.student;
+                fillRegistrationForm(pRes.student);
+                document.getElementById('stuNationalId').value = pRes.student.nationalId;
+                document.getElementById('stuNationalId').readOnly = true;
+                showScreen('registerScreen');
+              }
+            });
+          }, 1500);
+        } else {
+          alertDiv.className = 'alert alert-danger mt-3 d-block';
+          alertDiv.innerText = res.message;
+        }
+      });
+    }
+
+    function setupStudentDashboard(user) {
+      showScreen('studentDashboard');
+      document.getElementById('stuWelcome').innerText = `أهلاً بك، ${user.fullName}`;
+      document.getElementById('stuDetails').innerText = `${user.level} - الكيمياء والميكروبيولوجي`;
+      document.getElementById('stuHoursBadge').innerText = `إجمالي الساعات: ${user.totalHours || 0} ساعة`;
+      loadStudentCoursesList();
+    }
+
+    function loadStudentCoursesList() {
+      const listContainer = document.getElementById('studentCoursesList');
+      listContainer.innerHTML = '<div class="text-center p-3 text-muted">جاري جلب المقررات...</div>';
+      apiCall('fetchCoursesForStudent', { nationalId: currentUser.user.nationalId }).then(res => {
+        if (res.success) {
+          listContainer.innerHTML = '';
+          if (res.courses.length === 0) {
+            listContainer.innerHTML = `
+              <div class="alert alert-warning text-center">
+                لم يقم أعضاء هيئة التدريس برفع المحاضرات للمقررات التي اخترتها بعد.
+              </div>`;
+            return;
+          }
+          
+          const groups = {};
+          const levelOrder = ['المستوى الأول', 'المستوى الثاني', 'المستوى الثالث', 'المستوى الرابع'];
+          res.courses.forEach(c => {
+            const lvl = c.level || 'غير محدد';
+            if (!groups[lvl]) groups[lvl] = [];
+            groups[lvl].push(c);
+          });
+          const sortedLevels = Object.keys(groups).sort((a, b) => {
+            const ia = levelOrder.indexOf(a);
+            const ib = levelOrder.indexOf(b);
+            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+          });
+          
+          let html = '';
+          sortedLevels.forEach(lvl => {
+            html += `<div class="level-section-title">📘 ${lvl} <span class="badge bg-primary">${groups[lvl].length} مقرر</span></div>`;
+            html += `<div class="mb-4">`;
+            groups[lvl].forEach((c, idx) => {
+              const uniqueId = `course_${lvl.replace(/\s/g,'_')}_${idx}`;
+              const doctorsList = (c.doctors && c.doctors.length > 0) 
+                ? c.doctors.map(d => `<span class="badge bg-info text-dark doctor-badge-inline me-1">د. ${d}</span>`).join('') 
+                : '<span class="text-muted small">غير محدد</span>';
+              
+              html += `
+                <div class="course-accordion-item" id="item_${uniqueId}">
+                  <div class="course-accordion-header" onclick="toggleCourseAccordion('${uniqueId}')">
+                    <div class="course-title">
+                      <span class="course-icon">▶</span>
+                      <span>📖 ${c.courseName}</span>
+                    </div>
+                    <span class="badge bg-secondary" style="font-size:0.7rem;">اضغط للعرض</span>
+                  </div>
+                  <div class="course-accordion-body">
+                    <div class="course-meta-info">
+                      <div class="mb-1"><strong>👨‍🏫 الدكاترة:</strong> ${doctorsList}</div>
+                      <div><strong>📅 آخر تحديث:</strong> ${c.date}</div>
+                    </div>
+                    <div class="course-files-grid">
+                      ${renderFileLinks(c.files)}
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            html += `</div>`;
+          });
+          listContainer.innerHTML = html;
+        }
+      });
+    }
+
+    function toggleCourseAccordion(uniqueId) {
+      const item = document.getElementById('item_' + uniqueId);
+      if (!item) return;
+      item.classList.toggle('open');
+    }
+
+    function renderFileLinks(fileUrl) {
+      if (!fileUrl) return '<span class="text-muted small">لا يوجد ملفات</span>';
+      try {
+        if (fileUrl.trim().startsWith('[')) {
+          const files = JSON.parse(fileUrl);
+          if (files.length === 0) return '<span class="text-muted small">لا يوجد ملفات</span>';
+          return files.map(f => {
+            const doctorBadge = f.doctorName ? `<span class="badge bg-info text-dark doctor-file-badge">د. ${f.doctorName}</span>` : '';
+            return `<a href="${f.url}" target="_blank" class="btn btn-sm btn-outline-primary m-1">📄 ${f.title} ${doctorBadge}</a>`;
+          }).join('');
+        }
+      } catch(e) {}
+      return `<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary">📖 فتح المقرر</a>`;
+    }
+
+    function openUpdateCoursesModal() {
+      const container = document.getElementById('editCoursesList');
+      const stuRegistered = currentUser.user.registeredCourses || [];
+      
+      if (programCourses.length === 0) {
+        container.innerHTML = 'جاري التحميل...';
+        apiCall('getProgramCourses').then(res => {
+          if (res.success) { programCourses = res.courses; openUpdateCoursesModal(); }
+        });
+        return;
+      }
+      
+      const studentLevels = new Set();
+      stuRegistered.forEach(courseName => {
+        const course = programCourses.find(c => c.name === courseName);
+        if (course && course.level) studentLevels.add(course.level);
+      });
+      
+      let levelsHtml = `
+        <div class="mb-3 p-3 border rounded bg-light">
+          <label class="fw-bold d-block mb-2 text-primary">📚 اختر المستويات:</label>
+          <div class="row g-2">
+      `;
+      const allLevels = ['المستوى الأول', 'المستوى الثاني', 'المستوى الثالث', 'المستوى الرابع'];
+      allLevels.forEach(lvl => {
+        const checked = studentLevels.has(lvl) ? 'checked' : '';
+        const id = 'edit_lvl_' + lvl.replace(/\s/g, '_');
+        levelsHtml += `
+          <div class="col-6 col-md-3">
+            <div class="level-checkbox-box">
+              <div class="form-check">
+                <input class="form-check-input edit-level-checkbox" type="checkbox" 
+                       value="${lvl}" id="${id}" ${checked} 
+                       onchange="renderEditCoursesList()">
+                <label class="form-check-label fw-bold" for="${id}">${lvl}</label>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      levelsHtml += `</div></div>`;
+      
+      document.getElementById('editAlert').className = 'd-none';
+      container.innerHTML = levelsHtml + '<div id="editCoursesContainer"></div>';
+      
+      renderEditCoursesList();
+      new bootstrap.Modal(document.getElementById('updateCoursesModal')).show();
+    }
+
+    function renderEditCoursesList() {
+      const container = document.getElementById('editCoursesContainer');
+      const stuRegistered = currentUser.user.registeredCourses || [];
+      
+      const selectedLevels = [];
+      document.querySelectorAll('.edit-level-checkbox:checked').forEach(cb => {
+        selectedLevels.push(cb.value);
+      });
+      
+      if (selectedLevels.length === 0) {
+        container.innerHTML = '<span class="text-muted small">اختر مستوى واحد على الأقل...</span>';
+        checkHoursLimit('edit');
+        return;
+      }
+      
+      const filteredCourses = programCourses.filter(c => selectedLevels.includes(c.level));
+      
+      if (filteredCourses.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning py-2">لا توجد مقررات في المستويات المختارة.</div>';
+        return;
+      }
+      
+      container.innerHTML = buildCoursesHtml(filteredCourses, 'edit-stu-course', stuRegistered, 'edit');
+      checkHoursLimit('edit');
+    }
+
+    function submitCourseChangeRequest() {
+      const btn = document.getElementById('submitCourseChangeBtn');
+      const alertDiv = document.getElementById('editAlert');
+      
+      const selected = [];
+      let totalHours = 0;
+      document.querySelectorAll('.edit-stu-course:checked').forEach(cb => {
+        selected.push(cb.value);
+        totalHours += parseInt(cb.getAttribute('data-hours') || 0);
+      });
+      
+      const selectedLevels = [];
+      document.querySelectorAll('.edit-level-checkbox:checked').forEach(cb => {
+        selectedLevels.push(cb.value);
+      });
+      
+      if (selectedLevels.length === 0) {
+        alertDiv.className = 'alert alert-danger mt-2 d-block';
+        alertDiv.innerText = '⚠️ يرجى اختيار مستوى واحد على الأقل.';
+        return;
+      }
+      
+      if (totalHours > 18) { 
+        alertDiv.className = 'alert alert-danger mt-2 d-block';
+        alertDiv.innerText = '⚠️ تجاوزت الحد الأقصى (18 ساعة).';
+        return; 
+      }
+      if (selected.length === 0) {
+        alertDiv.className = 'alert alert-danger mt-2 d-block';
+        alertDiv.innerText = '⚠️ يرجى اختيار مقرر واحد على الأقل.';
+        return;
+      }
+      
+      const currentCourses = (currentUser.user.registeredCourses || []).slice().sort();
+      const currentHours = currentUser.user.totalHours || 0;
+      const newCourses = selected.slice().sort();
+      
+      let same = (currentCourses.length === newCourses.length);
+      if (same) {
+        for (let i = 0; i < currentCourses.length; i++) {
+          if (currentCourses[i] !== newCourses[i]) { same = false; break; }
+        }
+      }
+      if (same && totalHours === currentHours) {
+        alertDiv.className = 'alert alert-warning mt-2 d-block';
+        alertDiv.innerText = '⚠️ لا يوجد تغييرات جديدة لإرسالها.';
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.innerText = 'جاري الإرسال...';
+      alertDiv.className = 'alert alert-info mt-2 d-block';
+      alertDiv.innerText = 'جاري إرسال طلب التعديل...';
+      
+      apiCall('submitCourseChangeRequest', {
+        nationalId: currentUser.user.nationalId,
+        studentName: currentUser.user.fullName,
+        newCourses: selected,
+        newTotalHours: totalHours,
+        newLevels: selectedLevels.join('، ')
+      }).then(res => {
+        btn.disabled = false;
+        btn.innerText = '📩 إرسال طلب التعديل للأدمن';
+        if (res.success) {
+          alertDiv.className = 'alert alert-success mt-2 d-block';
+          alertDiv.innerText = res.message;
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('updateCoursesModal')).hide();
+          }, 3000);
+        } else {
+          alertDiv.className = 'alert alert-danger mt-2 d-block';
+          alertDiv.innerText = res.message;
+        }
+      });
+    }
+
+    function updateCircularProgress(percent, titleText, subText) {
+      const cb = document.getElementById('circleProgressBar');
+      const pt = document.getElementById('circlePercentText');
+      const te = document.getElementById('uploadStatusTitle');
+      const se = document.getElementById('uploadStatusSub');
+      const r = 45, cir = 2 * Math.PI * r;
+      const cp = Math.min(100, Math.max(0, percent));
+      const off = cir - (cp / 100) * cir;
+      if (cb) cb.style.strokeDashoffset = off;
+      if (pt) pt.innerText = Math.round(cp) + '%';
+      if (titleText && te) te.innerText = titleText;
+      if (subText && se) se.innerText = subText;
+    }
+
+    function showUploadProgressModal(title) {
+      updateCircularProgress(0, title || 'جاري معالجة الملفات...', 'يرجى عدم إغلاق الصفحة...');
+      const modalEl = document.getElementById('circularProgressModal');
+      const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+      modal.show();
+    }
+
+    function hideUploadProgressModal() {
+      const modalEl = document.getElementById('circularProgressModal');
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+    }
+
+    function uploadFileToDrive(file, url, onProgress) {
+      return new Promise(function(resolve, reject) {
+        const xhr = new XMLHttpRequest();
+        let uploadComplete = false;
+        xhr.open('PUT', url, true);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        xhr.upload.onprogress = function(e) {
+          if (e.lengthComputable) onProgress((e.loaded / e.total) * 100, e.loaded, e.total);
+        };
+        xhr.upload.onload = function() {
+          uploadComplete = true;
+          setTimeout(function() { resolve({ success: true }); }, 1500);
+        };
+        xhr.onload = function() {
+          try { const r = JSON.parse(xhr.responseText); resolve({ success: true, id: r.id }); }
+          catch(e) { resolve({ success: true }); }
+        };
+        xhr.onerror = function() {
+          if (uploadComplete) resolve({ success: true });
+          else reject(new Error('فشل الاتصال'));
+        };
+        xhr.send(file);
+      });
+    }
+
+    function openStudentProfileModal() {
+      const alertDiv = document.getElementById('editStuProfileAlert');
+      alertDiv.className = 'd-none';
+      apiCall('getStudentProfile', { nationalId: currentUser.user.nationalId }).then(res => {
+        if (!res.success) { alert(res.message); return; }
+        const p = res.profile;
+        window._studentOriginalData = {
+          fullName: p.fullName || '', phone: p.phone || '', guardianPhone: p.guardianPhone || '',
+          email: p.email || '', governorate: p.governorate || '', center: p.center || '', village: p.village || ''
+        };
+        document.getElementById('editStuName').value = p.fullName || '';
+        document.getElementById('editStuNationalId').value = p.nationalId || '';
+        document.getElementById('editStuLevel').value = p.level || '';
+        document.getElementById('editStuPhone').value = p.phone || '';
+        document.getElementById('editStuGuardianPhone').value = p.guardianPhone || '';
+        document.getElementById('editStuEmail').value = p.email || '';
+        document.getElementById('editStuGovernorate').value = p.governorate || '';
+        document.getElementById('editStuCenter').value = p.center || '';
+        document.getElementById('editStuVillage').value = p.village || '';
+        document.getElementById('editStuImage').value = '';
+        new bootstrap.Modal(document.getElementById('studentProfileModal')).show();
+      });
+    }
+
+    function saveStudentProfile(e) {
+      e.preventDefault();
+      const btn = document.getElementById('editStuProfileBtn');
+      const alertDiv = document.getElementById('editStuProfileAlert');
+      
+      const newPhone = document.getElementById('editStuPhone').value.trim();
+      if (!/^20\d{10}$/.test(newPhone)) {
+        alertDiv.className = 'alert alert-danger d-block';
+        alertDiv.innerText = '⚠️ رقم الهاتف يجب أن يبدأ بـ 20 ويكون 12 رقم.';
+        document.getElementById('editStuPhone').focus();
+        return;
+      }
+      
+      const newGuardian = document.getElementById('editStuGuardianPhone').value.trim();
+      if (!/^20\d{10}$/.test(newGuardian)) {
+        alertDiv.className = 'alert alert-danger d-block';
+        alertDiv.innerText = '⚠️ رقم ولي الأمر يجب أن يبدأ بـ 20 ويكون 12 رقم.';
+        document.getElementById('editStuGuardianPhone').focus();
+        return;
+      }
+      
+      const nameVal = document.getElementById('editStuName').value;
+      if (!isArabicFourPartName(nameVal)) {
+        alertDiv.className = 'alert alert-danger d-block';
+        alertDiv.innerText = '⚠️ الاسم يجب أن يكون بالعربية فقط ومكوّن من 4 أجزاء.';
+        return;
+      }
+      
+      const changes = {};
+      const old = window._studentOriginalData || {};
+      const newName = nameVal.trim().replace(/\s+/g, ' ');
+      const newEmail = document.getElementById('editStuEmail').value;
+      const newGov = document.getElementById('editStuGovernorate').value;
+      const newCenter = document.getElementById('editStuCenter').value.trim();
+      const newVillage = document.getElementById('editStuVillage').value.trim();
+      
+      if (newName !== old.fullName) changes["الاسم الكامل"] = { old: old.fullName, new: newName };
+      if (newPhone !== old.phone) changes["رقم الهاتف"] = { old: old.phone, new: newPhone };
+      if (newGuardian !== old.guardianPhone) changes["رقم هاتف ولي الأمر"] = { old: old.guardianPhone, new: newGuardian };
+      if (newEmail !== old.email) changes["البريد الإلكتروني"] = { old: old.email, new: newEmail };
+      if (newGov !== old.governorate) changes["المحافظة"] = { old: old.governorate, new: newGov };
+      if (newCenter !== old.center) changes["المركز"] = { old: old.center, new: newCenter };
+      if (newVillage !== old.village) changes["القرية / الحي"] = { old: old.village, new: newVillage };
+      
+      const imageInput = document.getElementById('editStuImage');
+      const hasNewImage = imageInput.files && imageInput.files.length > 0;
+      if (Object.keys(changes).length === 0 && !hasNewImage) {
+        alertDiv.className = 'alert alert-warning d-block';
+        alertDiv.innerText = '⚠️ مفيش تغييرات جديدة.';
+        return;
+      }
+      btn.disabled = true;
+      btn.innerText = 'جاري الإرسال...';
+      if (hasNewImage) {
+        const imageFile = imageInput.files[0];
+        apiCall('createStudentImageUploadSession', {
+          fileName: imageFile.name,
+          mimeType: imageFile.type,
+          nationalId: currentUser.user.nationalId
+        }).then(function(sr) {
+          if (!sr || !sr.success || !sr.uploadUrl) {
+            btn.disabled = false; btn.innerText = 'إرسال طلب التعديل';
+            alertDiv.className = 'alert alert-danger d-block';
+            alertDiv.innerText = '⚠️ فشل رفع الصورة: ' + (sr ? sr.message : 'خطأ');
+            return;
+          }
+          uploadFileToDrive(imageFile, sr.uploadUrl, function(p) {
+            btn.innerText = 'جاري رفع الصورة ' + Math.round(p) + '%...';
+          }).then(function() {
+            sendStudentRequest(changes, sr.uniqueName, btn, alertDiv);
+          }).catch(function(err) {
+            btn.disabled = false; btn.innerText = 'إرسال طلب التعديل';
+            alertDiv.className = 'alert alert-danger d-block';
+            alertDiv.innerText = '⚠️ فشل رفع الصورة: ' + err.message;
+          });
+        });
+      } else {
+        sendStudentRequest(changes, "", btn, alertDiv);
+      }
+    }
+
+    function sendStudentRequest(changes, imageFileName, btn, alertDiv) {
+      apiCall('submitEditRequest', {
+        userNationalId: currentUser.user.nationalId,
+        userType: "student",
+        userName: currentUser.user.fullName,
+        changes: changes,
+        imageFileName: imageFileName
+      }).then(res => {
+        btn.disabled = false;
+        btn.innerText = 'إرسال طلب التعديل';
+        if (res.success) {
+          alertDiv.className = 'alert alert-success d-block';
+          alertDiv.innerText = res.message;
+          setTimeout(() => {
+            bootstrap.Modal.getInstance(document.getElementById('studentProfileModal')).hide();
+          }, 3000);
+        } else {
+          alertDiv.className = 'alert alert-danger d-block';
+          alertDiv.innerText = res.message;
+        }
+      });
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('loginNationalId').value = '';
+      document.getElementById('preRegNationalId').value = '';
+      showScreen('homeScreen');
+    }
+  </script>
+</body>
+</html>
