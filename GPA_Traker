@@ -142,7 +142,7 @@
 // ═══════════════════════════════════════════
 // 🌐 API Configuration — ضع رابط الـ Worker هنا
 // ═══════════════════════════════════════════
-const API_URL = 'ضع_رابط_الـ_Worker_هنا';
+const API_URL = 'https://trackgpa.yma00.workers.dev';
 
 async function apiCall(action, params) {
   try {
