@@ -291,15 +291,23 @@ function doLogin() {
 
 // تعديل دالة التسجيل عشان تبعت العام والمستوى
 function doRegister() {
+  const phone = document.getElementById('regPhone').value.trim();
+  
+  // التحقق من رقم الهاتف (يبدأ بـ 20 و 12 رقم إجمالي)
+  if (!/^20\d{10}$/.test(phone)) {
+    return showMsg('regMsg', '⚠️ رقم الهاتف يجب أن يبدأ بـ 20 ويتكون من 12 رقماً.', false);
+  }
+
   const form = {
     nationalId: CURRENT_ID,
     fullName: document.getElementById('regName').value,
-    phone: document.getElementById('regPhone').value,
+    phone: phone,
     email: document.getElementById('regEmail').value,
     password: document.getElementById('regPwd').value,
-    level: document.getElementById('regLevel').value, // المستوى
-    academicYear: document.getElementById('regAcademicYear').value // العام
+    level: document.getElementById('regLevel').value,
+    academicYear: document.getElementById('regAcademicYear').value
   };
+  
   apiCall('registerStudent', { form: form }).then(res => {
     if (!res.ok) return showMsg('regMsg', res.msg, false);
     document.getElementById('regCard').classList.add('hidden');
