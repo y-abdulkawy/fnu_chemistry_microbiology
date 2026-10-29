@@ -79,10 +79,12 @@
         </div>
 
         <!-- جدول الطلبات -->
-        <div class="table-container">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-bold text-primary mb-0">📋 طلبات التعديل</h5>
-                <button class="btn btn-outline-secondary btn-sm" onclick="loadRequests()">🔄 تحديث</button>
+                <div>
+                    <button class="btn btn-success btn-sm fw-bold me-2" onclick="approveAllRequests()">✅ قبول جميع الطلبات المعلقة</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="loadRequests()">🔄 تحديث</button>
+                </div>
             </div>
             
             <div class="table-responsive">
@@ -216,7 +218,7 @@
                     return `
                         <tr>
                             <td><small>${r.requestId || '-'}</small></td>
-                            <td><b>${r.userName || '-'}</b></td>
+                            <td><b style="cursor:pointer; color:#0d6efd; text-decoration:underline;" onclick="viewStudentData('${r.nationalId}')" title="اضغط لعرض بيانات الطالب">${r.userName || '-'}</b></td>
                             <td>${r.nationalId || '-'}</td>
                             <td><span class="badge bg-secondary">${r.field || '-'}</span></td>
                             <td><small class="text-muted">${oldVal || '-'}</small></td>
@@ -247,6 +249,70 @@
                 } else {
                     alert('خطأ: ' + res.message);
                 }
+            });
+        }
+                // 5. عرض بيانات الطالب
+        function viewStudentData(nationalId) {
+            apiCall('adminGetStudentData', { nationalId: nationalId }).then(res => {
+                if (!res.success) {
+                    alert(res.message);
+                    return;
+                }
+                const s = res.student;
+                const coursesList = s.courses.length > 0 ? s.courses.map(c => `<li>${c}</li>`).join('') : '<li class="text-muted">لا يوجد مقررات مسجلة</li>';
+                
+                const htmlContent = `
+                    <div style="text-align: right;">
+                        <p><b>الاسم:</b> ${s.fullName}</p>
+                        <p><b>المستوى:</b> ${s.level}</p>
+                        <p><b>إجمالي الساعات:</b> ${s.totalHours} ساعة</p>
+                        <p><b>الهاتف:</b> ${s.phone}</p>
+                        <p><b>الإيميل:</b> ${s.email}</p>
+                        <hr>
+                        <h6 class="text-primary fw-bold">📚 المقررات المسجلة حالياً:</h6>
+                        <ul>${coursesList}</ul>
+                    </div>
+                `;
+                
+                // عرض البيانات في Modal
+                const modalHtml = `
+                    <div class="modal fade" id="studentDataModal" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">👨‍🎓 بيانات الطالب</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">${htmlContent}</div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // شيل أي مودال قديم وضيف الجديد
+                const oldModal = document.getElementById('studentDataModal');
+                if (oldModal) oldModal.remove();
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                new bootstrap.Modal(document.getElementById('studentDataModal')).show();
+            });
+        }
+
+        // 6. قبول جميع الطلبات
+        function approveAllRequests() {
+            if (!confirm('هل أنت متأكد من قبول جميع الطلبات المعلقة؟ سيتم تطبيق التغييرات فوراً على بيانات الطلاب.')) return;
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerText = 'جاري القبول...';
+            
+            apiCall('adminApproveAllRequests').then(res => {
+                btn.disabled = false;
+                btn.innerText = '✅ قبول جميع الطلبات المعلقة';
+                alert(res.message);
+                loadRequests();
+                loadStats();
             });
         }
     </script>
