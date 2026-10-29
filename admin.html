@@ -14,11 +14,22 @@
         .bg-blue { background: linear-gradient(135deg, #0d6efd, #0a58ca); }
         .bg-orange { background: linear-gradient(135deg, #fd7e14, #dc6a0a); }
         .table-container { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        /* تنسيقات التابات */
+        .nav-tabs .nav-link { font-weight: bold; color: #555; border: none; border-bottom: 3px solid transparent; font-size: 1.1rem; }
+        .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 3px solid #0d6efd; background: transparent; }
+        .nav-tabs .nav-link:hover { border-bottom: 3px solid #86b7fe; }
+
+        /* تنسيقات الأكورديون (الطلبات الحالية/السابقة) */
+        .accordion-button { font-weight: bold; font-size: 1.1rem; }
+        .accordion-button:not(.collapsed) { background-color: #e7f1ff; color: #0d6efd; }
+        
         .badge-pending { background-color: #ffc107; color: #000; }
         .badge-approved { background-color: #198754; color: #fff; }
         .badge-rejected { background-color: #dc3545; color: #fff; }
         .home-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; background-color: #6c757d; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; }
         .home-btn:hover { background-color: #5a6268; color: white; }
+        .student-row:hover { background-color: #f1f8ff; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -55,7 +66,6 @@
                 <small id="adminWelcome">مرحباً بك</small>
             </div>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-2" onclick="showDoctorUploads()">👨‍🏫 متابعة الدكاترة</button>
                 <button class="btn btn-light btn-sm fw-bold" onclick="logoutAdmin()">🚪 تسجيل خروج</button>
             </div>
         </div>
@@ -82,69 +92,157 @@
             </div>
         </div>
 
-        <!-- جدول الطلبات -->
-        <div class="table-container">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-primary mb-0">📋 طلبات التعديل</h5>
-                <div>
-                    <button class="btn btn-success btn-sm fw-bold me-2" onclick="approveAllRequests(event)">✅ قبول جميع الطلبات المعلقة</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="loadRequests()">🔄 تحديث</button>
+        <!-- شريط التابات -->
+        <ul class="nav nav-tabs mb-3" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests-pane" type="button" role="tab" onclick="loadRequests()">📋 الطلبات</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students-pane" type="button" role="tab" onclick="loadAllStudents()">👨‍🎓 متابعة الطلاب</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="doctors-tab" data-bs-toggle="tab" data-bs-target="#doctors-pane" type="button" role="tab" onclick="loadDoctorUploads()">👨‍🏫 متابعة الدكاترة</button>
+            </li>
+        </ul>
+
+        <!-- محتوى التابات -->
+        <div class="tab-content" id="adminTabsContent">
+            
+            <!-- 1. تاب الطلبات -->
+            <div class="tab-pane fade show active" id="requests-pane" role="tabpanel">
+                <div class="table-container">
+                    
+                    <!-- الطلبات الحالية (قيد المراجعة) -->
+                    <div class="accordion mb-3" id="currentRequestsAccordion">
+                        <div class="accordion-item border-warning">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#currentRequestsCollapse" aria-expanded="true">
+                                    ⏳ طلبات حالية (قيد المراجعة) - <span id="currentReqsCount" class="badge bg-warning text-dark ms-1">0</span>
+                                </button>
+                            </h2>
+                            <div id="currentRequestsCollapse" class="accordion-collapse collapse show">
+                                <div class="accordion-body p-0">
+                                    <div class="d-flex justify-content-end p-2 bg-light border-bottom">
+                                        <button class="btn btn-success btn-sm fw-bold" onclick="approveAllRequests(event)">✅ قبول جميع الطلبات المعلقة</button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>ID الطلب</th>
+                                                    <th>اسم الطالب</th>
+                                                    <th>الرقم القومي</th>
+                                                    <th>نوع التغيير</th>
+                                                    <th>القيمة القديمة</th>
+                                                    <th>القيمة الجديدة</th>
+                                                    <th>الإجراءات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="currentRequestsBody">
+                                                <tr><td colspan="7" class="text-center text-muted">جاري التحميل...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الطلبات السابقة (مكتملة/مرفوضة) -->
+                    <div class="accordion" id="pastRequestsAccordion">
+                        <div class="accordion-item border-secondary">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#pastRequestsCollapse">
+                                    ✅ طلبات سابقة (مكتملة/مرفوضة) - <span id="pastReqsCount" class="badge bg-secondary ms-1">0</span>
+                                </button>
+                            </h2>
+                            <div id="pastRequestsCollapse" class="accordion-collapse collapse">
+                                <div class="accordion-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>ID الطلب</th>
+                                                    <th>اسم الطالب</th>
+                                                    <th>الرقم القومي</th>
+                                                    <th>نوع التغيير</th>
+                                                    <th>القيمة القديمة</th>
+                                                    <th>القيمة الجديدة</th>
+                                                    <th>الحالة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="pastRequestsBody">
+                                                <tr><td colspan="7" class="text-center text-muted">جاري التحميل...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID الطلب</th>
-                            <th>اسم الطالب</th>
-                            <th>الرقم القومي</th>
-                            <th>نوع التغيير</th>
-                            <th>القيمة القديمة</th>
-                            <th>القيمة الجديدة</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="requestsTableBody">
-                        <tr><td colspan="8" class="text-center text-muted">جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
-        <!-- قسم متابعة الدكاترة (مخفي في البداية) -->
-        <div id="doctorUploadsSection" class="table-container d-none">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-warning mb-0">👨‍🏫 الملفات اللي رفعها الدكاترة</h5>
-                <button class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('doctorUploadsSection').classList.add('d-none')">✖ إغلاق</button>
+            <!-- 2. تاب متابعة الطلاب -->
+            <div class="tab-pane fade" id="students-pane" role="tabpanel">
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-primary mb-0">👨‍🎓 قائمة الطلاب المسجلين</h5>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="loadAllStudents()">🔄 تحديث</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>الرقم القومي</th>
+                                    <th>المستوى</th>
+                                    <th>إجمالي الساعات</th>
+                                    <th>الإجراء</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allStudentsBody">
+                                <tr><td colspan="5" class="text-center text-muted">اختر التاب لعرض الطلاب...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>اسم المقرر</th>
-                            <th>المستوى</th>
-                            <th>اسم الدكتور</th>
-                            <th>تاريخ الرفع</th>
-                            <th>عدد الملفات</th>
-                            <th>الملفات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="doctorUploadsBody">
-                        <tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
+            <!-- 3. تاب متابعة الدكاترة -->
+            <div class="tab-pane fade" id="doctors-pane" role="tabpanel">
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-warning mb-0">👨‍🏫 الملفات اللي رفعها الدكاترة</h5>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="loadDoctorUploads()">🔄 تحديث</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>اسم المقرر</th>
+                                    <th>المستوى</th>
+                                    <th>اسم الدكتور</th>
+                                    <th>تاريخ الرفع</th>
+                                    <th>عدد الملفات</th>
+                                    <th>الملفات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctorUploadsBody">
+                                <tr><td colspan="6" class="text-center text-muted">اختر التاب لعرض الملفات...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // ⚠️ ضع رابط الـ Worker بتاعك هنا
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
-        
         let currentAdmin = null;
 
         async function apiCall(action, params) {
@@ -207,57 +305,79 @@
             });
         }
 
-        // 3. تحميل الطلبات
+        // 3. تحميل الطلبات (حالية وسابقة)
         function loadRequests() {
-            const tbody = document.getElementById('requestsTableBody');
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">جاري التحميل...</td></tr>';
+            const currentBody = document.getElementById('currentRequestsBody');
+            const pastBody = document.getElementById('pastRequestsBody');
+            currentBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">جاري التحميل...</td></tr>';
+            pastBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">جاري التحميل...</td></tr>';
             
             apiCall('adminGetRequests').then(res => {
                 if (!res.success) {
-                    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${res.message}</td></tr>`;
-                    return;
-                }
-                if (res.requests.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">لا توجد طلبات حالياً</td></tr>';
+                    currentBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${res.message}</td></tr>`;
                     return;
                 }
 
-                tbody.innerHTML = res.requests.map(r => {
-                    let statusBadge = '';
-                    let actionButtons = '';
-                    
-                    if (r.status === 'قيد المراجعة') {
-                        statusBadge = '<span class="badge badge-pending">⏳ قيد المراجعة</span>';
-                        actionButtons = `
-                            <button class="btn btn-sm btn-success me-1" onclick="updateStatus(${r.row}, 'تمت الموافقة', '${r.requestId}')">✅ موافقة</button>
-                            <button class="btn btn-sm btn-danger" onclick="updateStatus(${r.row}, 'مرفوض', '${r.requestId}')">❌ رفض</button>
+                const currentReqs = res.requests.filter(r => r.status === 'قيد المراجعة');
+                const pastReqs = res.requests.filter(r => r.status !== 'قيد المراجعة');
+
+                document.getElementById('currentReqsCount').innerText = currentReqs.length;
+                document.getElementById('pastReqsCount').innerText = pastReqs.length;
+
+                // تعبئة الطلبات الحالية
+                if (currentReqs.length === 0) {
+                    currentBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">لا توجد طلبات حالية</td></tr>';
+                } else {
+                    currentBody.innerHTML = currentReqs.map(r => {
+                        let oldVal = r.oldValue ? r.oldValue.toString() : '';
+                        let newVal = r.newValue ? r.newValue.toString() : '';
+                        if (oldVal.length > 30) oldVal = oldVal.substring(0, 30) + '...';
+                        if (newVal.length > 30) newVal = newVal.substring(0, 30) + '...';
+
+                        return `
+                            <tr>
+                                <td><small>${r.requestId || '-'}</small></td>
+                                <td><b style="cursor:pointer; color:#0d6efd; text-decoration:underline;" onclick="viewStudentData('${r.nationalId}')">${r.userName || '-'}</b></td>
+                                <td>${r.nationalId || '-'}</td>
+                                <td><span class="badge bg-secondary">${r.field || '-'}</span></td>
+                                <td><small class="text-muted">${oldVal || '-'}</small></td>
+                                <td><small class="text-success fw-bold">${newVal || '-'}</small></td>
+                                <td>
+                                    <button class="btn btn-sm btn-success me-1" onclick="updateStatus(${r.row}, 'تمت الموافقة', '${r.requestId}')">✅ موافقة</button>
+                                    <button class="btn btn-sm btn-danger" onclick="updateStatus(${r.row}, 'مرفوض', '${r.requestId}')">❌ رفض</button>
+                                </td>
+                            </tr>
                         `;
-                    } else if (r.status === 'تمت الموافقة') {
-                        statusBadge = '<span class="badge badge-approved">✅ تمت الموافقة</span>';
-                        actionButtons = '<span class="text-muted small">—</span>';
-                    } else {
-                        statusBadge = '<span class="badge badge-rejected">❌ مرفوض</span>';
-                        actionButtons = '<span class="text-muted small">—</span>';
-                    }
+                    }).join('');
+                }
 
-                    let oldVal = r.oldValue ? r.oldValue.toString() : '';
-                    let newVal = r.newValue ? r.newValue.toString() : '';
-                    if (oldVal.length > 30) oldVal = oldVal.substring(0, 30) + '...';
-                    if (newVal.length > 30) newVal = newVal.substring(0, 30) + '...';
+                // تعبئة الطلبات السابقة
+                if (pastReqs.length === 0) {
+                    pastBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">لا توجد طلبات سابقة</td></tr>';
+                } else {
+                    pastBody.innerHTML = pastReqs.map(r => {
+                        let statusBadge = r.status === 'تمت الموافقة' 
+                            ? '<span class="badge badge-approved">✅ تمت الموافقة</span>' 
+                            : '<span class="badge badge-rejected">❌ مرفوض</span>';
+                        
+                        let oldVal = r.oldValue ? r.oldValue.toString() : '';
+                        let newVal = r.newValue ? r.newValue.toString() : '';
+                        if (oldVal.length > 30) oldVal = oldVal.substring(0, 30) + '...';
+                        if (newVal.length > 30) newVal = newVal.substring(0, 30) + '...';
 
-                    return `
-                        <tr>
-                            <td><small>${r.requestId || '-'}</small></td>
-                            <td><b style="cursor:pointer; color:#0d6efd; text-decoration:underline;" onclick="viewStudentData('${r.nationalId}')" title="اضغط لعرض بيانات الطالب">${r.userName || '-'}</b></td>
-                            <td>${r.nationalId || '-'}</td>
-                            <td><span class="badge bg-secondary">${r.field || '-'}</span></td>
-                            <td><small class="text-muted">${oldVal || '-'}</small></td>
-                            <td><small class="text-success fw-bold">${newVal || '-'}</small></td>
-                            <td>${statusBadge}</td>
-                            <td>${actionButtons}</td>
-                        </tr>
-                    `;
-                }).join('');
+                        return `
+                            <tr>
+                                <td><small>${r.requestId || '-'}</small></td>
+                                <td><b style="cursor:pointer; color:#0d6efd; text-decoration:underline;" onclick="viewStudentData('${r.nationalId}')">${r.userName || '-'}</b></td>
+                                <td>${r.nationalId || '-'}</td>
+                                <td><span class="badge bg-secondary">${r.field || '-'}</span></td>
+                                <td><small class="text-muted">${oldVal || '-'}</small></td>
+                                <td><small class="text-success fw-bold">${newVal || '-'}</small></td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
             });
         }
 
@@ -282,13 +402,10 @@
             });
         }
 
-        // 5. عرض بيانات الطالب
+        // 5. عرض بيانات الطالب (مودال)
         function viewStudentData(nationalId) {
             apiCall('adminGetStudentData', { nationalId: nationalId }).then(res => {
-                if (!res.success) {
-                    alert(res.message);
-                    return;
-                }
+                if (!res.success) { alert(res.message); return; }
                 const s = res.student;
                 const coursesList = s.courses.length > 0 ? s.courses.map(c => `<li>${c}</li>`).join('') : '<li class="text-muted">لا يوجد مقررات مسجلة</li>';
                 
@@ -331,7 +448,6 @@
         // 6. قبول جميع الطلبات
         function approveAllRequests(event) {
             if (!confirm('هل أنت متأكد من قبول جميع الطلبات المعلقة؟ سيتم تطبيق التغييرات فوراً على بيانات الطلاب.')) return;
-            
             const btn = event.target;
             btn.disabled = true;
             btn.innerText = 'جاري القبول...';
@@ -345,10 +461,34 @@
             });
         }
 
-        // 7. عرض قسم الدكاترة
-        function showDoctorUploads() {
-            const section = document.getElementById('doctorUploadsSection');
-            section.classList.remove('d-none');
+        // 7. تحميل قائمة الطلاب (تاب متابعة الطلاب)
+        function loadAllStudents() {
+            const tbody = document.getElementById('allStudentsBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">جاري التحميل...</td></tr>';
+            
+            apiCall('adminGetAllStudents').then(res => {
+                if (!res.success) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${res.message}</td></tr>`;
+                    return;
+                }
+                if (res.students.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا يوجد طلاب مسجلين بعد.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.students.map(s => `
+                    <tr class="student-row" onclick="viewStudentData('${s.nationalId}')" title="اضغط لعرض تفاصيل الطالب">
+                        <td><b>${s.fullName}</b></td>
+                        <td>${s.nationalId}</td>
+                        <td><span class="badge bg-secondary">${s.level}</span></td>
+                        <td>${s.totalHours} ساعة</td>
+                        <td><button class="btn btn-sm btn-outline-primary">👁️ عرض</button></td>
+                    </tr>
+                `).join('');
+            });
+        }
+
+        // 8. تحميل ملفات الدكاترة (تاب متابعة الدكاترة)
+        function loadDoctorUploads() {
             const tbody = document.getElementById('doctorUploadsBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
             
@@ -361,7 +501,6 @@
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لم يقم أي دكتور برفع ملفات بعد.</td></tr>';
                     return;
                 }
-
                 tbody.innerHTML = res.uploads.map(u => {
                     let filesHtml = '';
                     if (u.filesCount === 0) {
@@ -372,7 +511,6 @@
                             return `<a href="${f.url}" target="_blank" class="btn btn-sm btn-outline-primary m-1" style="font-size:0.75rem;">📄 ${f.title || 'ملف'} ${docBadge}</a>`;
                         }).join('');
                     }
-
                     return `
                         <tr>
                             <td><b>${u.courseName}</b></td>
