@@ -490,23 +490,20 @@
 
         // 7. تحميل قائمة الطلاب (تاب متابعة الطلاب)
         // 7. تحميل قائمة الطلاب (من السيرفر)
+        // 7. تحميل قائمة الطلاب (من السيرفر)
         function loadAllStudents() {
             const listContainer = document.getElementById('allStudentsList');
             listContainer.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
             apiCall('adminGetAllStudents').then(res => {
+                console.log("Response from API:", res); // سطر مهم للتأكد في الكونسول
                 if (!res.success) {
                     listContainer.innerHTML = `<div class="alert alert-danger text-center">${res.message}</div>`;
                     return;
                 }
                 
-                // بنحفظ البيانات في المتغير العام عشان نفلتر عليها
                 ALL_STUDENTS_DATA = res.students;
-                
-                // بنرتبهم أبجدياً مرة واحدة
                 ALL_STUDENTS_DATA.sort((a, b) => a.fullName.localeCompare(b.fullName, 'ar'));
-
-                // بنستدعي دالة الفلترة عشان تعرضهم
                 applyStudentFilters();
             });
         }
