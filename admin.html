@@ -184,28 +184,54 @@
                 </div>
             </div>
 
-            <!-- 2. تاب متابعة الطلاب -->
+            <!-- 2. تاب متابعة الطلاب  ---------------------------------------------------------------------------------------------------------- -->
+            <!-- 2. تاب متابعة الطلاب (مسلسل + فلترة) -->
             <div class="tab-pane fade" id="students-pane" role="tabpanel">
                 <div class="table-container">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    
+                    <!-- الهيدر والفلترة -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h5 class="fw-bold text-primary mb-0">👨‍🎓 قائمة الطلاب المسجلين</h5>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="loadAllStudents()">🔄 تحديث</button>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary" id="studentsCountBadge">0 طالب</span>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="loadAllStudents()">🔄 تحديث</button>
+                        </div>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>الاسم</th>
-                                    <th>الرقم القومي</th>
-                                    <th>المستوى</th>
-                                    <th>إجمالي الساعات</th>
-                                    <th>الإجراء</th>
-                                </tr>
-                            </thead>
-                            <tbody id="allStudentsBody">
-                                <tr><td colspan="5" class="text-center text-muted">اختر التاب لعرض الطلاب...</td></tr>
-                            </tbody>
-                        </table>
+
+                    <!-- شريط الفلترة -->
+                    <div class="row g-2 mb-3 bg-light p-3 rounded border">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small mb-1">🔍 بحث (الاسم أو الرقم القومي):</label>
+                            <input type="text" id="searchStudent" class="form-control form-control-sm" placeholder="اكتب اسم الطالب أو رقمه..." oninput="applyStudentFilters()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small mb-1">📚 المستوى:</label>
+                            <select id="filterLevel" class="form-select form-select-sm" onchange="applyStudentFilters()">
+                                <option value="">كل المستويات</option>
+                                <option value="المستوى الأول">المستوى الأول</option>
+                                <option value="المستوى الثاني">المستوى الثاني</option>
+                                <option value="المستوى الثالث">المستوى الثالث</option>
+                                <option value="المستوى الرابع">المستوى الرابع</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold small mb-1">⏱️ عدد الساعات:</label>
+                            <select id="filterHours" class="form-select form-select-sm" onchange="applyStudentFilters()">
+                                <option value="">كل الساعات</option>
+                                <option value="less12">أقل من 12 ساعة</option>
+                                <option value="12to15">من 12 إلى 15 ساعة</option>
+                                <option value="15to18">من 15 إلى 18 ساعة</option>
+                                <option value="more18">أكثر من 18 ساعة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-outline-danger btn-sm w-100" onclick="resetStudentFilters()">🗑️ مسح الفلتر</button>
+                        </div>
+                    </div>
+                    
+                    <!-- هنا هيظهر المسلسل (List) -->
+                    <div class="list-group" id="allStudentsList">
+                        <div class="text-center text-muted p-3">اختر التاب لعرض الطلاب...</div>
                     </div>
                 </div>
             </div>
@@ -244,6 +270,7 @@
     <script>
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
         let currentAdmin = null;
+        let ALL_STUDENTS_DATA = []; // عشان نخزن كل الطلاب ونفلتر عليهم
 
         async function apiCall(action, params) {
             try {
@@ -462,32 +489,95 @@
         }
 
         // 7. تحميل قائمة الطلاب (تاب متابعة الطلاب)
+        // 7. تحميل قائمة الطلاب (من السيرفر)
         function loadAllStudents() {
-            const tbody = document.getElementById('allStudentsBody');
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">جاري التحميل...</td></tr>';
+            const listContainer = document.getElementById('allStudentsList');
+            listContainer.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
             apiCall('adminGetAllStudents').then(res => {
                 if (!res.success) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${res.message}</td></tr>`;
+                    listContainer.innerHTML = `<div class="alert alert-danger text-center">${res.message}</div>`;
                     return;
                 }
-                if (res.students.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا يوجد طلاب مسجلين بعد.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = res.students.map(s => `
-                    <tr class="student-row" onclick="viewStudentData('${s.nationalId}')" title="اضغط لعرض تفاصيل الطالب">
-                        <td><b>${s.fullName}</b></td>
-                        <td>${s.nationalId}</td>
-                        <td><span class="badge bg-secondary">${s.level}</span></td>
-                        <td>${s.totalHours} ساعة</td>
-                        <td><button class="btn btn-sm btn-outline-primary">👁️ عرض</button></td>
-                    </tr>
-                `).join('');
+                
+                // بنحفظ البيانات في المتغير العام عشان نفلتر عليها
+                ALL_STUDENTS_DATA = res.students;
+                
+                // بنرتبهم أبجدياً مرة واحدة
+                ALL_STUDENTS_DATA.sort((a, b) => a.fullName.localeCompare(b.fullName, 'ar'));
+
+                // بنستدعي دالة الفلترة عشان تعرضهم
+                applyStudentFilters();
             });
         }
 
-        // 8. تحميل ملفات الدكاترة (تاب متابعة الدكاترة)
+        // 8. دالة الفلترة (اللي بتشتغل مع البحث والمستوى والساعات)
+        function applyStudentFilters() {
+            const searchText = document.getElementById('searchStudent').value.trim().toLowerCase();
+            const filterLevel = document.getElementById('filterLevel').value;
+            const filterHours = document.getElementById('filterHours').value;
+            const listContainer = document.getElementById('allStudentsList');
+            const countBadge = document.getElementById('studentsCountBadge');
+
+            // فلترة البيانات
+            let filtered = ALL_STUDENTS_DATA.filter(s => {
+                // 1. فلترة البحث
+                const matchesSearch = s.fullName.toLowerCase().includes(searchText) || s.nationalId.includes(searchText);
+                
+                // 2. فلترة المستوى
+                const matchesLevel = filterLevel === "" || s.level === filterLevel;
+                
+                // 3. فلترة الساعات
+                let matchesHours = true;
+                const hours = Number(s.totalHours) || 0;
+                if (filterHours === 'less12') matchesHours = hours < 12;
+                else if (filterHours === '12to15') matchesHours = hours >= 12 && hours <= 15;
+                else if (filterHours === '15to18') matchesHours = hours > 15 && hours <= 18;
+                else if (filterHours === 'more18') matchesHours = hours > 18;
+
+                return matchesSearch && matchesLevel && matchesHours;
+            });
+
+            // تحديث العداد
+            countBadge.innerText = filtered.length + ' طالب';
+
+            // عرض النتيجة
+            if (filtered.length === 0) {
+                listContainer.innerHTML = '<div class="text-center text-muted p-3">لا يوجد طلاب مطابقين للفلترة الحالية.</div>';
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map((s, index) => `
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center student-row" 
+                     onclick="viewStudentData('${s.nationalId}')" 
+                     style="cursor: pointer; transition: 0.2s;">
+                    
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-secondary rounded-pill">${index + 1}</span>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-primary">${s.fullName}</h6>
+                            <small class="text-muted">🆔 ${s.nationalId}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-info text-dark">${s.level}</span>
+                        <span class="badge bg-dark">${s.totalHours} ساعة</span>
+                        <button class="btn btn-sm btn-outline-primary">👁️ عرض</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 9. دالة مسح الفلتر
+        function resetStudentFilters() {
+            document.getElementById('searchStudent').value = '';
+            document.getElementById('filterLevel').value = '';
+            document.getElementById('filterHours').value = '';
+            applyStudentFilters();
+        }
+
+        // 10. تحميل ملفات الدكاترة (تاب متابعة الدكاترة)
         function loadDoctorUploads() {
             const tbody = document.getElementById('doctorUploadsBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
