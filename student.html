@@ -389,6 +389,7 @@
         }
 
         // دالة تسليم الكويز النهائية (مع التنبيه للأسئلة الفاضية)
+        // دالة تسليم الكويز النهائية (مع التنبيه للأسئلة الفاضية)
         function submitQuizWizard(qIndex) {
             const quiz = window.LOADED_QUIZZES[qIndex];
             const state = quizState[qIndex];
@@ -397,10 +398,9 @@
             let answeredCount = Object.keys(state.answers).length;
             let unansweredCount = totalQuestions - answeredCount;
 
-            // لو فيه أسئلة متجاوبة، ننبهه
             if (unansweredCount > 0) {
-                const confirmSubmit = confirm(`⚠️ تنبيه: أنت لم تجب على ${unansweredCount} سؤال من أصل ${totalQuestions}.\n\nهل أنت متأكد من رغبتك في تسليم الكويز الآن؟ (الأسئلة التي لم تُجب عليها ستُحسب بصفر)`);
-                if (!confirmSubmit) return; // لو ضغط إلغاء، نوقف العملية
+                const confirmSubmit = confirm(`⚠️ تنبيه: أنت لم تجب على ${unansweredCount} سؤال من أصل ${totalQuestions}.\n\nهل أنت متأكد من رغبتك في تسليم الكويز الآن؟`);
+                if (!confirmSubmit) return;
             } else {
                 const confirmSubmit = confirm(`هل أنت متأكد من تسليم الكويز؟`);
                 if (!confirmSubmit) return;
@@ -421,15 +421,34 @@
 
             const percentage = totalGrades > 0 ? (earnedGrades / totalGrades) * 100 : 0;
             
-            // عرض النتيجة
-            alert(`✅ تم تسليم الكويز بنجاح!\n\nالنتيجة: ${earnedGrades} / ${totalGrades} (${percentage.toFixed(1)}%)\nإجابات صحيحة: ${correctCount} من ${totalQuestions}`);
-            
-            // قفل الكويز عشان ميعيدش تاني
-            const card = document.getElementById(`quiz_card_${qIndex}`);
-            card.style.opacity = '0.7';
-            card.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-            card.querySelectorAll('button').forEach(btn => btn.disabled = true);
-            card.querySelector('.card-header').innerHTML += ' <span class="badge bg-dark">تم التسليم ✅</span>';
+            // قفل زرار التسليم عشان ميعملش دبل كليك
+            const btn = event.target;
+            btn.disabled = true; btn.innerText = 'جاري التسليم...';
+
+            // تجهيز البيانات وإرسالها للسيرفر
+            const payload = {
+                studentName: currentUser.fullName,
+                nationalId: currentUser.nationalId,
+                courseName: quiz.courseName,
+                doctorName: quiz.doctorName,
+                quizTitle: quiz.quizTitle,
+                earnedGrades: earnedGrades,
+                totalGrades: totalGrades,
+                percentage: percentage.toFixed(1)
+            };
+
+            apiCall('saveQuizResult', { payload: payload }).then(res => {
+                btn.innerText = 'تم التسليم ✅';
+                
+                // عرض النتيجة للطالب
+                alert(`✅ تم تسليم الكويز بنجاح!\n\nالنتيجة: ${earnedGrades} / ${totalGrades} (${percentage.toFixed(1)}%)\nإجابات صحيحة: ${correctCount} من ${totalQuestions}`);
+                
+                // قفل الكويز
+                const card = document.getElementById(`quiz_card_${qIndex}`);
+                card.style.opacity = '0.7';
+                card.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+                card.querySelectorAll('button').forEach(b => b.disabled = true);
+            });
         }
         // 4. تصحيح الكويز
         function submitQuizAnswers(event, quizIndex, questions) {
