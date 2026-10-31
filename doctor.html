@@ -70,7 +70,10 @@
                 <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz-pane" type="button" role="tab">📝 رفع كويز</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="myuploads-tab" data-bs-toggle="tab" data-bs-target="#myuploads-pane" type="button" role="tab" onclick="loadMyUploads()">📚 ما قمت برفعه</button>
+                <button class="nav-link" id="myuploads-tab" data-bs-toggle="tab" data-bs-target="#myuploads-pane" type="button" role="tab" onclick="loadMyUploads()">📚 متابعة المرفوعات</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-pane" type="button" role="tab" onclick="loadDoctorResults()">📊 نتائج الكويزات</button>
             </li>
         </ul>
 
@@ -142,7 +145,9 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">المقرر:</label>
-                                    <input type="text" id="quizCourse" class="form-control" placeholder="اسم المقرر">
+                                    <select id="quizCourse" class="form-select">
+                                        <option value="">اختر المقرر...</option>
+                                    </select>                                    
                                 </div>
                             </div>
                             
@@ -163,7 +168,9 @@
                             <div class="row g-3 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">اسم المقرر:</label>
-                                    <input type="text" id="excelQuizCourse" class="form-control" placeholder="مثال: كيمياء تحليلية">
+                                    <select id="excelQuizCourse" class="form-select">
+                                        <option value="">اختر المقرر...</option>
+                                    </select>                                    
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">عنوان الكويز:</label>
@@ -227,6 +234,30 @@
                 </div>
             </div>
 
+            <!-- 4. تاب نتائج الكويزات -->
+            <div class="tab-pane fade" id="results-pane" role="tabpanel">
+                <div class="table-container">
+                    <h5 class="fw-bold text-success mb-3">📊 نتائج الطلاب في الكويزات</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>اسم الطالب</th>
+                                    <th>المقرر</th>
+                                    <th>الكويز</th>
+                                    <th>الدرجة</th>
+                                    <th>النسبة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctorResultsBody">
+                                <tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -267,6 +298,9 @@
                     document.getElementById('loginScreen').classList.add('d-none');
                     document.getElementById('dashboardScreen').classList.remove('d-none');
                     document.getElementById('docWelcome').innerText = `مرحباً د. ${res.user.name} (${res.user.dept})`;
+                    
+                    // تحميل المقررات في القوائم المنسدلة فور الدخول
+                    loadCoursesDropdown();
                 } else if (res.success && res.role !== "doctor") {
                     alertDiv.className = 'alert alert-warning mt-3 d-block';
                     alertDiv.innerText = 'هذا الحساب مسجل كطالب وليس دكتور. يرجى الدخول من منصة الطالب.';
@@ -284,7 +318,25 @@
             document.getElementById('docNationalId').value = '';
         }
 
-        // 2. رفع الملفات (المحاضرات)
+        // 2. تحميل المقررات في القوائم المنسدلة
+        function loadCoursesDropdown() {
+            apiCall('getProgramCourses').then(res => {
+                if (res.success) {
+                    const select1 = document.getElementById('quizCourse');
+                    const select2 = document.getElementById('excelQuizCourse');
+                    
+                    select1.innerHTML = '<option value="">اختر المقرر...</option>';
+                    select2.innerHTML = '<option value="">اختر المقرر...</option>';
+
+                    res.courses.forEach(c => {
+                        select1.innerHTML += `<option value="${c.name}">${c.name} (${c.level})</option>`;
+                        select2.innerHTML += `<option value="${c.name}">${c.name} (${c.level})</option>`;
+                    });
+                }
+            });
+        }
+
+        // 3. رفع الملفات (المحاضرات)
         function handleFileUpload(e) {
             e.preventDefault();
             const btn = document.getElementById('upBtn');
@@ -358,7 +410,7 @@
             });
         }
 
-        // 3. دوال الإضافة اليدوية للكويز
+        // 4. دوال الإضافة اليدوية للكويز
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
             const qIndex = container.children.length + 1;
@@ -397,10 +449,10 @@
 
         function submitDoctorQuiz() {
             const title = document.getElementById('quizTitle').value.trim();
-            const course = document.getElementById('quizCourse').value.trim();
+            const course = document.getElementById('quizCourse').value;
             const alertDiv = document.getElementById('quizAlert');
             
-            if (!title || !course) return alert("يرجى كتابة عنوان الكويز واسم المقرر");
+            if (!title || !course) return alert("يرجى كتابة عنوان الكويز واختيار المقرر");
 
             const questions = [];
             document.querySelectorAll('.question-item').forEach(item => {
@@ -433,7 +485,7 @@
             });
         }
 
-        // 4. دوال رفع الكويز من الإكسيل
+        // 5. دوال رفع الكويز من الإكسيل
         function downloadQuizTemplate() {
             const data = [
                 ["السؤال", "اختيار 1", "اختيار 2", "اختيار 3", "اختيار 4", "رقم الإجابة الصح (1-4)", "الدرجة"],
@@ -448,14 +500,14 @@
 
         function uploadExcelQuiz() {
             const fileInput = document.getElementById('excelQuizFile');
-            const course = document.getElementById('excelQuizCourse').value.trim();
+            const course = document.getElementById('excelQuizCourse').value;
             const title = document.getElementById('excelQuizTitle').value.trim();
             const alertDiv = document.getElementById('excelAlert');
             const btn = document.getElementById('uploadExcelBtn');
 
             if (!course || !title) {
                 alertDiv.className = 'alert alert-warning mt-3 d-block';
-                alertDiv.innerText = '⚠️ يرجى كتابة اسم المقرر وعنوان الكويز أولاً.';
+                alertDiv.innerText = '⚠️ يرجى اختيار المقرر وكتابة عنوان الكويز أولاً.';
                 return;
             }
             if (!fileInput.files || fileInput.files.length === 0) {
@@ -526,7 +578,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // 5. جلب المرفوعات (محاضرات وكويزات)
+        // 6. جلب المرفوعات (محاضرات وكويزات)
         function loadMyUploads() {
             // الملفات
             const filesBody = document.getElementById('myFilesBody');
@@ -563,6 +615,33 @@
                 } else {
                     quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا يوجد كويزات مرفوعة.</td></tr>';
                 }
+            });
+        }
+
+        // 7. جلب نتائج الكويزات
+        function loadDoctorResults() {
+            const tbody = document.getElementById('doctorResultsBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
+            
+            apiCall('fetchQuizResultsForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
+                if (!res.success) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${res.message}</td></tr>`;
+                    return;
+                }
+                if (res.results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لم يقم أي طالب بحل الكويزات حتى الآن.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = res.results.map(r => `
+                    <tr>
+                        <td><small>${r.date}</small></td>
+                        <td><b>${r.studentName}</b></td>
+                        <td><span class="badge bg-secondary">${r.courseName}</span></td>
+                        <td>${r.quizTitle}</td>
+                        <td><span class="badge bg-primary">${r.earnedGrades} / ${r.totalGrades}</span></td>
+                        <td><span class="badge ${parseFloat(r.percentage) >= 50 ? 'bg-success' : 'bg-danger'}">${r.percentage}</span></td>
+                    </tr>
+                `).join('');
             });
         }
     </script>
