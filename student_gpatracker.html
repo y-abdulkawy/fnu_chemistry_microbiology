@@ -37,18 +37,59 @@
   .modal-content { background: #fff; max-width: 850px; margin: 30px auto; padding: 22px; border-radius: 12px; }
   
   /* زرار العودة للرئيسية */
-  .home-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; display: flex; align-items: center; gap: 8px; }
-  .home-btn:hover { background-color: #5a6268; color: white; transform: translateY(-2px); }
+  /* الهيدر الثابت */
+  .sticky-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #0d47a1;
+      color: white;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 9999;
+      font-weight: bold;
+  }
+  
+  .sticky-header h1 {
+      margin: 0;
+      font-size: 20px;
+      color: white;
+  }
+
+  .sticky-header .home-btn {
+      background-color: #6c757d;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s;
+      border: 1px solid white;
+  }
+  
+  .sticky-header .home-btn:hover {
+      background-color: white;
+      color: #0d47a1;
+  }
+
+  /* عشان المحتوى ميتغطاش تحت الهيدر */
+  .container { 
+      margin-top: 80px; /* مساحة للهيدر */
+  }
 </style>
 </head>
 <body>
 
-<!-- زرار العودة للرئيسية -->
-<a href="index.html" class="home-btn">🏠 العودة للرئيسية</a>
-
+<!-- الهيدر الثابت -->
+<header class="sticky-header">
+    <h1>🎓 نظام المتابعة الأكاديمية</h1>
+    <a href="index.html" class="home-btn">🏠 العودة للرئيسية</a>
+</header>
 <div class="container">
-  <h1>🎓 نظام المتابعة الأكاديمية</h1>
-
   <!-- بوابة الدخول -->
   <div id="loginCard" class="card">
     <h2>بوابة الدخول</h2>
