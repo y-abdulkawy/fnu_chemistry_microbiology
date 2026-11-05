@@ -39,6 +39,8 @@
   /* زرار العودة للرئيسية */
   /* الهيدر الثابت */
     /* الهيدر الثابت */
+
+   /* الهيدر الثابت */
   .sticky-header {
       position: fixed;
       top: 0;
@@ -46,13 +48,13 @@
       right: 0;
       background-color: #0d47a1;
       color: white;
-      padding: 15px 30px;
+      padding: 10px 20px; /* مسافة داخلية مناسبة */
       display: flex;
-      justify-content: space-between; /* يخلي الكلام يمين والزرار شمال */
+      justify-content: space-between; /* يخلي الزرار على الشمال والاسم على اليمين */
       align-items: center;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       z-index: 9999;
-      height: 65px;
+      height: 60px; /* ارتفاع ثابت */
   }
   
   .sticky-header h1 {
@@ -63,28 +65,27 @@
   }
 
   .sticky-header .home-btn {
-      background-color: #ffffff;
-      color: #0d47a1;
+      background-color: #6c757d; /* لون رمادي زي باقي الأزرار */
+      color: white;
       padding: 8px 16px;
       border-radius: 8px;
       text-decoration: none;
       font-weight: bold;
       transition: 0.3s;
       font-size: 15px;
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      border: 1px solid white;
   }
   
   .sticky-header .home-btn:hover {
-      background-color: #e3f2fd;
-      transform: scale(1.05);
+      background-color: #5a6268;
+      color: white;
   }
 
   /* عشان المحتوى ميتغطاش تحت الهيدر */
   .container { 
-      margin-top: 90px; 
+      margin-top: 80px; /* مساحة للهيدر */
   }
+ 
 </style>
 </head>
 <body>
