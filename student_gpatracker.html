@@ -560,7 +560,10 @@ function loadHistory() {
         <td style="color:${gpaColor(s.semesterGPA)};font-weight:bold;">${s.semesterGPA.toFixed(2)}</td>
         <td style="font-weight:bold; color:#0d47a1;">${s.semesterPoints.toFixed(2)}</td>
         <td style="color:${gpaColor(s.cumulativeGPA)};font-weight:bold;">${s.cumulativeGPA.toFixed(2)}</td>
-        <td><button class="secondary" style="width:auto;padding:5px 10px;font-size:12px;margin:0;" onclick="openDetails('${s.semesterId}')">تفاصيل</button></td>
+       <td style="white-space: nowrap;">
+       <button class="secondary" style="width:auto;padding:5px 10px;font-size:12px;margin:0;" onclick="openDetails('${s.semesterId}')">تفاصيل</button>
+       <button class="primary" style="width:auto;padding:5px 10px;font-size:12px;margin:0; margin-right:5px; background-color:#1976d2;" onclick="editSemesterFromHistory('${s.semesterId}')">✏️ تعديل</button>
+       <button class="danger" style="width:auto;padding:5px 10px;font-size:12px;margin:0; margin-right:5px;" onclick="deleteSemester('${s.semesterId}')">🗑️ حذف</button> </td>
       `;
       tbody.appendChild(tr);
     });
@@ -597,6 +600,31 @@ function openDetails(semesterId) {
   });
 }
 
+ function editSemesterFromHistory(semesterId) {
+  // بنفصل العام والفصل من الـ ID (مثال: "2025-2026 - الخريفي")
+  const parts = semesterId.split(' - ');
+  if (parts.length !== 2) return;
+  
+  const academicYear = parts[0];
+  const termLabelAr = parts[1];
+  
+  // بنحول اسم الفصل العربي للكود الإنجليزي
+  let termCode = 'fall';
+  if (termLabelAr === 'الربيعي') termCode = 'spring';
+  else if (termLabelAr === 'الصيفي') termCode = 'summer';
+
+  // بنفتح شاشة إضافة الفصل ونحط القيم
+  document.getElementById('addSemesterBtnBox').classList.add('hidden');
+  document.getElementById('semesterSelectionBox').classList.remove('hidden');
+  document.getElementById('courseTableBox').classList.remove('hidden');
+  
+  document.getElementById('academicYear').value = academicYear;
+  document.getElementById('semesterTerm').value = termCode;
+  
+  // بنشغل دالة التحميل عشان تجيب المقررات وتعدلها
+  checkSemesterStatus();
+}
+ 
 function changeGrade(sel) {
   const code = sel.dataset.code; const sem = sel.dataset.sem; const grade = sel.value;
   apiCall('updateGrade', { id: CURRENT_ID, semesterId: sem, courseCode: code, grade: grade }).then(res => {
@@ -630,6 +658,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // الحد الأقصى 12 رقم
   if (val.length > 12) val = val.substring(0, 12);
   input.value = val;
+}
+
+ function deleteSemester(semesterId) {
+  if (!confirm('هل أنت متأكد من حذف هذا الفصل بالكامل؟ (سيتم مسح كل المقررات والدرجات)')) return;
+  
+  apiCall('deleteSemester', { id: CURRENT_ID, semesterId: semesterId }).then(res => {
+    alert(res.msg);
+    if (res.ok) {
+      loadDashboard();
+      loadHistory();
+    }
+  });
 }
 </script>
 </body>
