@@ -41,6 +41,7 @@
     /* الهيدر الثابت */
 
    /* الهيدر الثابت */
+  /* الهيدر الثابت */
   .sticky-header {
       position: fixed;
       top: 0;
@@ -48,13 +49,16 @@
       right: 0;
       background-color: #0d47a1;
       color: white;
-      padding: 10px 20px; /* مسافة داخلية مناسبة */
+      padding: 10px 20px;
       display: flex;
-      justify-content: space-between; /* يخلي الزرار على الشمال والاسم على اليمين */
-      align-items: center;
+      flex-direction: column; /* بيخلي العناصر تحت بعض */
+      justify-content: center; /* توسيط رأسي */
+      align-items: center; /* توسيط أفقي في منتصف الشاشة */
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
       z-index: 9999;
-      height: 60px; /* ارتفاع ثابت */
+      gap: 10px; /* مسافة بين الاسم والزرار */
+      height: auto; /* ارتفاع تلقائي حسب المحتوى */
+      min-height: 80px;
   }
   
   .sticky-header h1 {
@@ -62,28 +66,29 @@
       font-size: 20px;
       color: white;
       font-weight: bold;
+      text-align: center;
   }
 
   .sticky-header .home-btn {
-      background-color: #6c757d; /* لون رمادي زي باقي الأزرار */
+      background-color: #6c757d;
       color: white;
-      padding: 8px 16px;
+      padding: 6px 16px;
       border-radius: 8px;
       text-decoration: none;
       font-weight: bold;
       transition: 0.3s;
-      font-size: 15px;
+      font-size: 14px;
       border: 1px solid white;
   }
   
   .sticky-header .home-btn:hover {
-      background-color: #5a6268;
-      color: white;
+      background-color: white;
+      color: #0d47a1;
   }
 
   /* عشان المحتوى ميتغطاش تحت الهيدر */
   .container { 
-      margin-top: 80px; /* مساحة للهيدر */
+      margin-top: 130px; /* زودنا المساحة عشان الهيدر بقى أطول شوية */
   }
  
 </style>
