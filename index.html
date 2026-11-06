@@ -11,9 +11,10 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100vh; 
+            min-height: 100vh; 
             margin: 0; 
             font-family: 'Segoe UI', Tahoma, sans-serif; 
+            padding: 20px;
         }
         .portal-card { 
             background: white; 
@@ -21,10 +22,10 @@
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
             text-align: center; 
-            max-width: 500px; 
-            width: 90%; 
+            max-width: 600px; 
+            width: 100%; 
         }
-        .header-logo { font-size: 50px; margin-bottom: 10px; }
+        .header-logo { font-size: 60px; margin-bottom: 10px; }
         .btn-portal { 
             display: flex;
             align-items: center;
@@ -46,35 +47,43 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
             color: white;
         }
-        .btn-student { background: linear-gradient(135deg, #0d6efd, #0a58ca); }
-        .btn-gpa { background: linear-gradient(135deg, #198754, #146c43); }
+        
+        /* ألوان الزراير */
+        .btn-ebook { background: linear-gradient(135deg, #0d6efd, #0a58ca); } /* أزرق */
+        .btn-gpa { background: linear-gradient(135deg, #198754, #146c43); } /* أخضر */
+        .btn-doctor { background: linear-gradient(135deg, #fd7e14, #e8590c); } /* برتقالي */
+        .btn-admin { background: linear-gradient(135deg, #dc3545, #b02a37); } /* أحمر */
+        
+        hr { margin: 25px 0; }
     </style>
 </head>
 <body>
     <div class="portal-card">
         <div class="header-logo">🏛️</div>
-        <h2 class="mb-3 text-primary fw-bold">جامعة الفيوم الأهلية</h2>
+        <h2 class="mb-2 text-primary fw-bold">جامعة الفيوم الأهلية</h2>
         <h5 class="text-muted mb-4">برنامج الكيمياء والميكروبيولوجي</h5>
         <hr>
-        <p class="mb-4 fw-bold">اختر البوابة التي تريد الدخول إليها</p>
+        <p class="mb-4 fw-bold fs-5">اختر البوابة التي تريد الدخول إليها</p>
         
-        <!-- هنا غيرنا اسم الملف لـ student.html -->
-        <a href="student.html" class="btn-portal btn-student">
-            👨‍🎓 منصة الكتب الإلكتروني  
+        <!-- بوابة الطلاب -->
+        <a href="student_ebook.html" class="btn-portal btn-ebook">
+            📚 منصة الكتاب الإلكتروني
         </a>
         
-        <!-- هنا غيرنا اسم الملف لـ student_gpatracker.html -->
         <a href="student_gpatracker.html" class="btn-portal btn-gpa">
             📊 نظام المتابعة الأكاديمية (GPA)
         </a>
-        <!-- زرار هيئة التدريس (الدكاترة) -->
-        <a href="doctor.html" class="btn-portal" style="background: linear-gradient(135deg, #198754, #146c43);">
-            👨‍🏫 دخول هيئة التدريس (الدكاترة)
+
+        <hr>
+
+        <!-- بوابة الدكاترة والأدمن -->
+        <a href="doctor.html" class="btn-portal btn-doctor">
+            👨‍🏫 بوابة أعضاء هيئة التدريس
         </a>
-              <!-- زرار الأدمن -->
-        <a href="admin.html" class="btn-portal" style="background: linear-gradient(135deg, #212529, #000000); margin-top: 10px;">
-            👑 دخول الأدمن
-        </a>  
+
+        <a href="admin.html" class="btn-portal btn-admin">
+            ⚙️ دخول الإدارة (الأدمن)
+        </a>
     </div>
 </body>
 </html>
