@@ -10,10 +10,45 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f9; display: flex; flex-direction: column; height: 100vh; }
         
         /* شريط التبويبات */
-        .tabs-header { background-color: #0d47a1; padding: 10px; display: flex; justify-content: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; }
-        .tab-btn { background: none; border: 2px solid transparent; color: white; padding: 10px 20px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 8px; transition: 0.3s; }
-        .tab-btn:hover { background-color: rgba(255,255,255,0.1); }
-        .tab-btn.active { background-color: white; color: #0d47a1; }
+                /* شريط التبويبات */
+        .tabs-header { 
+            background-color: #0d47a1; 
+            padding: 15px; 
+            display: flex; 
+            justify-content: center; 
+            gap: 20px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+            z-index: 1000; 
+        }
+        
+        /* شكل الزرار العادي (غير مفعل) */
+        .tab-btn { 
+            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة شوية */
+            border: 2px solid rgba(255, 255, 255, 0.4); 
+            color: white; 
+            padding: 12px 30px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* تأثير لما تقف بالماوس */
+        .tab-btn:hover { 
+            background-color: rgba(255, 255, 255, 0.3); 
+            transform: translateY(-2px); /* يرتفع شوية */
+        }
+        
+        /* شكل الزرار المفعل (اللي إنت واقف عليه) */
+        .tab-btn.active { 
+            background-color: white; 
+            color: #0d47a1; 
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transform: scale(1.05); /* يكبر شوية عشان يبان */
+        }
         
         /* زرار العودة للرئيسية */
         .home-btn { position: absolute; left: 15px; top: 15px; background-color: #6c757d; color: white; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; }
