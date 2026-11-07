@@ -85,22 +85,22 @@
                     <h5 class="fw-bold text-primary mb-3">رفع محاضرة / ملف جديد</h5>
                     <form id="uploadForm" onsubmit="handleFileUpload(event)">
                         <div class="row g-3">
+                            <!-- التعديل هنا: تحويل المقرر لقائمة منسدلة -->
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">اسم المقرر:</label>
-                                <input type="text" id="upCourse" class="form-control" required placeholder="مثال: كيمياء تحليلية">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">العام الدراسي:</label>
-                                <input type="text" id="upYear" class="form-control" required placeholder="2024-2025">
+                                <label class="form-label fw-bold">المقرر:</label>
+                                <select id="upCourse" class="form-select" onchange="updateLevels('upCourse', 'upLevel')" required>
+                                    <option value="">اختر المقرر...</option>
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-bold">المستوى:</label>
                                 <select id="upLevel" class="form-select" required>
-                                    <option value="المستوى الأول">المستوى الأول</option>
-                                    <option value="المستوى الثاني">المستوى الثاني</option>
-                                    <option value="المستوى الثالث">المستوى الثالث</option>
-                                    <option value="المستوى الرابع">المستوى الرابع</option>
+                                    <option value="">اختر المستوى...</option>
                                 </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">العام الدراسي:</label>
+                                <input type="text" id="upYear" class="form-control" required placeholder="2024-2025">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">عنوان المحاضرة:</label>
@@ -139,15 +139,22 @@
                         <!-- الطريقة الأولى: إضافة يدوية -->
                         <div class="tab-pane fade show active" id="manual-quiz" role="tabpanel">
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold">عنوان الكويز:</label>
                                     <input type="text" id="quizTitle" class="form-control" placeholder="مثال: كويز الفصل الأول">
                                 </div>
-                                <div class="col-md-6">
+                                <!-- التعديل هنا: إضافة المستوى للمقرر -->
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold">المقرر:</label>
-                                    <select id="quizCourse" class="form-select">
+                                    <select id="quizCourse" class="form-select" onchange="updateLevels('quizCourse', 'quizLevel')">
                                         <option value="">اختر المقرر...</option>
                                     </select>                                    
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">المستوى:</label>
+                                    <select id="quizLevel" class="form-select">
+                                        <option value="">اختر المستوى...</option>
+                                    </select>
                                 </div>
                             </div>
                             
@@ -166,13 +173,20 @@
                                 <strong>💡 طريقة الاستخدام:</strong> حمل النموذج، املأ الأسئلة (العمود 1: السؤال، الأعمدة 2-5: الاختيارات، العمود 6: رقم الإجابة الصح من 1 لـ 4، العمود 7: الدرجة)، ثم ارفع الملف هنا.
                             </div>
                             <div class="row g-3 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold">اسم المقرر:</label>
-                                    <select id="excelQuizCourse" class="form-select">
+                                <!-- التعديل هنا: إضافة المستوى للمقرر في الإكسيل -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">المقرر:</label>
+                                    <select id="excelQuizCourse" class="form-select" onchange="updateLevels('excelQuizCourse', 'excelQuizLevel')">
                                         <option value="">اختر المقرر...</option>
                                     </select>                                    
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">المستوى:</label>
+                                    <select id="excelQuizLevel" class="form-select">
+                                        <option value="">اختر المستوى...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label fw-bold">عنوان الكويز:</label>
                                     <input type="text" id="excelQuizTitle" class="form-control" placeholder="مثال: كويز الفصل الأول">
                                 </div>
@@ -266,6 +280,7 @@
         // ⚠️ ضع رابط الـ Worker بتاعك هنا
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
         let currentDoctor = null;
+        let doctorCoursesData = []; // متغير جديد بيحفظ المقررات والمستويات
 
         async function apiCall(action, params) {
             try {
@@ -299,7 +314,7 @@
                     document.getElementById('dashboardScreen').classList.remove('d-none');
                     document.getElementById('docWelcome').innerText = `مرحباً د. ${res.user.name} (${res.user.dept})`;
                     
-                    // تحميل المقررات في القوائم المنسدلة فور الدخول
+                    // تحميل المقررات المخصصة للدكتور
                     loadCoursesDropdown();
                 } else if (res.success && res.role !== "doctor") {
                     alertDiv.className = 'alert alert-warning mt-3 d-block';
@@ -318,25 +333,55 @@
             document.getElementById('docNationalId').value = '';
         }
 
-        // 2. تحميل المقررات في القوائم المنسدلة
+        // 2. تحميل المقررات في القوائم المنسدلة (المعدلة)
         function loadCoursesDropdown() {
-            apiCall('getProgramCourses').then(res => {
+            // بننادي الدالة الجديدة اللي بتجيب مقررات الدكتور بس
+            apiCall('getDoctorCourses', { nationalId: currentDoctor.nationalId }).then(res => {
                 if (res.success) {
-                    const select1 = document.getElementById('quizCourse');
-                    const select2 = document.getElementById('excelQuizCourse');
+                    doctorCoursesData = res.courses; // بنحفظهم هنا
                     
-                    select1.innerHTML = '<option value="">اختر المقرر...</option>';
-                    select2.innerHTML = '<option value="">اختر المقرر...</option>';
-
-                    res.courses.forEach(c => {
-                        select1.innerHTML += `<option value="${c.name}">${c.name} (${c.level})</option>`;
-                        select2.innerHTML += `<option value="${c.name}">${c.name} (${c.level})</option>`;
+                    const selects = ['upCourse', 'quizCourse', 'excelQuizCourse'];
+                    
+                    selects.forEach(id => {
+                        const sel = document.getElementById(id);
+                        if (sel) {
+                            sel.innerHTML = '<option value="">اختر المقرر...</option>';
+                            if (res.courses.length === 0) {
+                                sel.innerHTML = '<option value="">لا توجد مقررات مسندة إليك</option>';
+                            } else {
+                                res.courses.forEach(c => {
+                                    // بنحط اسم المقرر كقيمة عشان يتوافق مع الكود القديم
+                                    sel.innerHTML += `<option value="${c.name}">${c.code} - ${c.name}</option>`;
+                                });
+                            }
+                        }
                     });
+                } else {
+                    alert("خطأ في جلب المقررات: " + res.message);
                 }
             });
         }
 
-        // 3. رفع الملفات (المحاضرات)
+        // 3. دالة تحديث المستويات (جديدة)
+        function updateLevels(courseSelectId, levelSelectId) {
+            const selectedName = document.getElementById(courseSelectId).value;
+            const levelSelect = document.getElementById(levelSelectId);
+            
+            levelSelect.innerHTML = '<option value="">اختر المستوى...</option>';
+            if (!selectedName) return;
+
+            const courseData = doctorCoursesData.find(c => c.name === selectedName);
+            
+            if (courseData && courseData.levels) {
+                courseData.levels.forEach(level => {
+                    if (level) {
+                        levelSelect.innerHTML += `<option value="${level}">${level}</option>`;
+                    }
+                });
+            }
+        }
+
+        // 4. رفع الملفات (المحاضرات)
         function handleFileUpload(e) {
             e.preventDefault();
             const btn = document.getElementById('upBtn');
@@ -345,11 +390,12 @@
             const progressBar = document.getElementById('uploadProgressBar');
             
             const file = document.getElementById('upFile').files[0];
-            const course = document.getElementById('upCourse').value.trim();
+            const course = document.getElementById('upCourse').value; // بنجيب الاسم من القائمة
             const year = document.getElementById('upYear').value.trim();
-            const level = document.getElementById('upLevel').value;
+            const level = document.getElementById('upLevel').value; // بنجيب المستوى من القائمة
             const title = document.getElementById('upTitle').value.trim();
 
+            if (!course || !level) return alert("اختر المقرر والمستوى أولاً");
             if (!file) return alert("اختر ملف أولاً");
 
             btn.disabled = true; alertDiv.className = 'd-none'; progressBox.classList.remove('d-none'); progressBar.style.width = '0%'; progressBar.innerText = '0%';
@@ -391,6 +437,7 @@
                             if (saveRes.success) {
                                 alertDiv.className = 'alert alert-success mt-3 d-block'; alertDiv.innerText = '✅ تم رفع المحاضرة بنجاح!';
                                 document.getElementById('uploadForm').reset();
+                                document.getElementById('upLevel').innerHTML = '<option value="">اختر المستوى...</option>';
                             } else {
                                 alertDiv.className = 'alert alert-danger mt-3 d-block'; alertDiv.innerText = saveRes.message;
                             }
@@ -410,7 +457,7 @@
             });
         }
 
-        // 4. دوال الإضافة اليدوية للكويز
+        // ... باقي دوال الكويزات زي ما هي ماعدا إضافة التحقق من المستوى
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
             const qIndex = container.children.length + 1;
@@ -450,9 +497,10 @@
         function submitDoctorQuiz() {
             const title = document.getElementById('quizTitle').value.trim();
             const course = document.getElementById('quizCourse').value;
+            const level = document.getElementById('quizLevel').value; // بنجيب المستوى
             const alertDiv = document.getElementById('quizAlert');
             
-            if (!title || !course) return alert("يرجى كتابة عنوان الكويز واختيار المقرر");
+            if (!title || !course || !level) return alert("يرجى كتابة عنوان الكويز واختيار المقرر والمستوى");
 
             const questions = [];
             document.querySelectorAll('.question-item').forEach(item => {
@@ -480,12 +528,12 @@
                 if (res.success) {
                     document.getElementById('quizTitle').value = '';
                     document.getElementById('quizCourse').value = '';
+                    document.getElementById('quizLevel').innerHTML = '<option value="">اختر المستوى...</option>';
                     document.getElementById('questionsContainer').innerHTML = '';
                 }
             });
         }
 
-        // 5. دوال رفع الكويز من الإكسيل
         function downloadQuizTemplate() {
             const data = [
                 ["السؤال", "اختيار 1", "اختيار 2", "اختيار 3", "اختيار 4", "رقم الإجابة الصح (1-4)", "الدرجة"],
@@ -501,13 +549,14 @@
         function uploadExcelQuiz() {
             const fileInput = document.getElementById('excelQuizFile');
             const course = document.getElementById('excelQuizCourse').value;
+            const level = document.getElementById('excelQuizLevel').value; // بنجيب المستوى
             const title = document.getElementById('excelQuizTitle').value.trim();
             const alertDiv = document.getElementById('excelAlert');
             const btn = document.getElementById('uploadExcelBtn');
 
-            if (!course || !title) {
+            if (!course || !title || !level) {
                 alertDiv.className = 'alert alert-warning mt-3 d-block';
-                alertDiv.innerText = '⚠️ يرجى اختيار المقرر وكتابة عنوان الكويز أولاً.';
+                alertDiv.innerText = '⚠️ يرجى اختيار المقرر والمستوى وكتابة عنوان الكويز أولاً.';
                 return;
             }
             if (!fileInput.files || fileInput.files.length === 0) {
@@ -556,6 +605,7 @@
                             alertDiv.className = 'alert alert-success mt-3 d-block';
                             alertDiv.innerText = `✅ ${res.message}`;
                             document.getElementById('excelQuizCourse').value = '';
+                            document.getElementById('excelQuizLevel').innerHTML = '<option value="">اختر المستوى...</option>';
                             document.getElementById('excelQuizTitle').value = '';
                             fileInput.value = '';
                         } else {
@@ -578,9 +628,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // 6. جلب المرفوعات (محاضرات وكويزات)
         function loadMyUploads() {
-            // الملفات
             const filesBody = document.getElementById('myFilesBody');
             filesBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">جاري التحميل...</td></tr>';
             apiCall('fetchCoursesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
@@ -599,7 +647,6 @@
                 }
             });
 
-            // الكويزات
             const quizzesBody = document.getElementById('myQuizzesBody');
             quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
             apiCall('fetchQuizzesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
@@ -618,7 +665,6 @@
             });
         }
 
-        // 7. جلب نتائج الكويزات
         function loadDoctorResults() {
             const tbody = document.getElementById('doctorResultsBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
