@@ -751,20 +751,29 @@
             reader.readAsArrayBuffer(file);
         }
 
-        function loadMyUploads() {
+              function loadMyUploads() {
             // تحميل الملفات
             const container = document.getElementById('myFilesContainer');
             container.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
             apiCall('fetchCoursesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
-                if (res.success && res.courses.length > 0) {
+                if (res && res.success && res.courses.length > 0) {
                     let html = '';
                     
                     res.courses.forEach(c => {
-                        const files = JSON.parse(c.fileUrl);
-                        
+                        let files = [];
+                        try {
+                            // محاولة قراءة الملفات بأمان
+                            files = JSON.parse(c.fileUrl);
+                            if (!Array.isArray(files)) files = []; 
+                        } catch (e) {
+                            console.log("خطأ في قراءة ملفات المقرر: " + c.courseName);
+                            return; // لو الشكل مكسور، نتخطى المقرر ده ونكمل الباقي
+                        }
 
-                                                let filesHtml = files.map((f, index) => {
+                        if (files.length === 0) return; // لو مفيش ملفات، مش هنعرض الكارت
+                        
+                        let filesHtml = files.map((f, index) => {
                             let isHidden = f.isHidden === true;
                             let btnClass = isHidden ? 'btn-success' : 'btn-danger';
                             let btnText = isHidden ? '👁️ إظهار للطالب' : '🙈 إخفاء عن الطالب';
@@ -773,7 +782,6 @@
                             if (!displayName || displayName === "undefined") displayName = f.fileName;
                             if (!displayName || displayName === "undefined") displayName = "ملف بدون اسم";
                             
-                            // لو مفيش رابط، منعرضش الزرار
                             let linkBtn = f.url ? `<a href="${f.url}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold ms-2">🔗 فتح</a>` : '';
 
                             return `
@@ -791,6 +799,7 @@
                                 </li>
                             `;
                         }).join('');
+
                         html += `
                             <div class="card mb-3 shadow-sm border-0">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -809,7 +818,7 @@
                         `;
                     });
                     
-                    container.innerHTML = html;
+                    container.innerHTML = html || '<div class="alert alert-warning text-center">لا توجد ملفات سليمة لعرضها.</div>';
                 } else {
                     container.innerHTML = '<div class="alert alert-warning text-center">لا يوجد ملفات مرفوعة.</div>';
                 }
@@ -820,7 +829,7 @@
             if (quizzesBody) {
                 quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
                 apiCall('fetchQuizzesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
-                    if (res.success && res.quizzes.length > 0) {
+                    if (res && res.success && res.quizzes.length > 0) {
                         quizzesBody.innerHTML = res.quizzes.map(q => `
                             <tr>
                                 <td><b>${q.quizTitle}</b></td>
