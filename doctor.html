@@ -854,7 +854,6 @@
         function toggleFileVisibility(courseName, academicYear, fileName, fileTitle, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
-            
             apiCall('toggleFileVisibility', {
                 nationalId: currentDoctor.nationalId,
                 courseName: courseName,
