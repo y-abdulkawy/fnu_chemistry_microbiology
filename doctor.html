@@ -98,12 +98,7 @@
                                     <span class="text-muted small">اختر المقرر أولاً...</span>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">العام الدراسي:</label>
-                                <select id="upYear" class="form-select" required>
-                                    <option value="">اختر العام الدراسي...</option>
-                                </select>
-                            </div>
+        
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">عنوان المحاضرة:</label>
                                 <input type="text" id="upTitle" class="form-control" required placeholder="مثال: المحاضرة الأولى">
@@ -176,7 +171,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">المقرر:</label>
                                     <select id="excelQuizCourse" class="form-select" onchange="updateLevels('excelQuizCourse', 'excelLevelBox', 'excel-lvl-chk')">
-                                        <option value="">اختر المقرر...</option>
+                                        <option value=""> المقرر...</option>
                                     </select>                                    
                                 </div>
                                 <div class="col-md-6">
@@ -186,7 +181,7 @@
                                 <div class="col-12 mt-2">
                                     <label class="form-label fw-bold">المستويات (يمكن اختيار أكثر من مستوى):</label>
                                     <div id="excelLevelBox" class="levels-box">
-                                        <span class="text-muted small">اختر المقرر أولاً...</span>
+                                        <span class="text-muted small"> المقرر أولاً...</span>
                                     </div>
                                 </div>
                             </div>
@@ -388,7 +383,12 @@
             
             const file = document.getElementById('upFile').files[0];
             const course = document.getElementById('upCourse').value; 
-            const year = document.getElementById('upYear').value.trim();
+            // حساب العام الدراسي أوتوماتيك في الخلفية
+            const today = new Date();
+            let currentYear = today.getFullYear();
+            if (today.getMonth() < 8) { currentYear = currentYear - 1; } // لو إحنا قبل سبتمبر
+            const year = currentYear + '-' + (currentYear + 1);
+            
             const title = document.getElementById('upTitle').value.trim();
 
             // تجميع المستويات المختارة
@@ -695,34 +695,7 @@
             });
         }
         // دالة ملء قائمة الأعوام الدراسية واختيار العام الحالي تلقائياً
-        function populateUpYears() {
-            const select = document.getElementById('upYear');
-            if (!select) return;
-            
-            select.innerHTML = '<option value="">اختر العام الدراسي...</option>';
-            
-            const today = new Date();
-            let currentYear = today.getFullYear();
-            
-            if (today.getMonth() < 8) { 
-                currentYear = currentYear - 1;
-            }
-            const currentAcademicYear = currentYear + '-' + (currentYear + 1);
-        
-            for (let y = 2024; y <= 2036; y++) {
-                const label = y + '-' + (y + 1);
-                const opt = document.createElement('option');
-                opt.value = label;
-                opt.textContent = label;
-                
-                if (label === currentAcademicYear) {
-                    opt.selected = true; // هتختار العام الحالي أوتوماتيك
-                }
-                
-                select.appendChild(opt);
-            }
-        }
-        
+
         // تشغيل الدالة أول ما الصفحة تحمل
         document.addEventListener('DOMContentLoaded', () => {
             populateUpYears();
