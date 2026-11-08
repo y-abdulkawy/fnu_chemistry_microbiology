@@ -99,10 +99,6 @@
                                 </div>
                             </div>
         
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">عنوان المحاضرة:</label>
-                                <input type="text" id="upTitle" class="form-control" required placeholder="مثال: المحاضرة الأولى">
-                            </div>
                             <div class="col-12 mt-4">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <label class="form-label fw-bold m-0 text-primary">الملفات المرفقة:</label>
@@ -125,7 +121,7 @@
                         <div class="progress mt-3 d-none" id="uploadProgressBox" style="height: 25px;">
                             <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" id="uploadProgressBar" role="progressbar" style="width: 0%;">0%</div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100 mt-3 fw-bold" id="upBtn">🚀 رفع الملف</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3 fw-bold" id="upBtn">🚀 رفع الملفات</button>
                     </form>
                     <div id="uploadAlert" class="alert d-none mt-3"></div>
                 </div>
@@ -185,7 +181,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">المقرر:</label>
                                     <select id="excelQuizCourse" class="form-select" onchange="updateLevels('excelQuizCourse', 'excelLevelBox', 'excel-lvl-chk')">
-                                        <option value=""> المقرر...</option>
+                                        <option value="">اختر المقرر...</option>
                                     </select>                                    
                                 </div>
                                 <div class="col-md-6">
@@ -195,7 +191,7 @@
                                 <div class="col-12 mt-2">
                                     <label class="form-label fw-bold">المستويات (يمكن اختيار أكثر من مستوى):</label>
                                     <div id="excelLevelBox" class="levels-box">
-                                        <span class="text-muted small"> المقرر أولاً...</span>
+                                        <span class="text-muted small">اختر المقرر أولاً...</span>
                                     </div>
                                 </div>
                             </div>
@@ -316,7 +312,6 @@
                 
                 if (res.success && res.role === "doctor") {
                     currentDoctor = res.user;
-                    // حفظ بيانات الدكتور في المتصفح
                     localStorage.setItem('fnu_doctor_session', JSON.stringify(res.user));
                     
                     document.getElementById('loginScreen').classList.add('d-none');
@@ -335,7 +330,6 @@
 
         function logoutDoctor() {
             currentDoctor = null;
-             // مسح بيانات الدكتور من المتصفح عند الخروج
             localStorage.removeItem('fnu_doctor_session');
             document.getElementById('dashboardScreen').classList.add('d-none');
             document.getElementById('loginScreen').classList.remove('d-none');
@@ -365,7 +359,6 @@
             });
         }
 
-        // التعديل هنا: تحويل المستويات لمربعات اختيار
         function updateLevels(courseSelectId, boxId, checkboxClass) {
             const selectedName = document.getElementById(courseSelectId).value;
             const container = document.getElementById(boxId);
@@ -393,7 +386,6 @@
             }
         }
 
-
         async function handleFileUpload(e) {
             e.preventDefault();
             const btn = document.getElementById('upBtn');
@@ -403,6 +395,7 @@
             
             const course = document.getElementById('upCourse').value; 
             
+            // حساب العام الدراسي أوتوماتيك في الخلفية
             const today = new Date();
             let currentYear = today.getFullYear();
             if (today.getMonth() < 8) { currentYear = currentYear - 1; }
@@ -426,7 +419,6 @@
                 const file = row.querySelector('.file-input').files[0];
                 if (!title || !file) return alert("تأكد من كتابة عنوان واختيار ملف لكل صف");
                 
-                // فحص التكرار
                 if (uniqueTitles.has(title) || uniqueNames.has(file.name)) {
                     return alert("⚠️ لا يمكنك إضافة نفس الملف أو نفس العنوان مرتين في نفس الشاشة.");
                 }
@@ -479,7 +471,6 @@
                         xhr.send(item.file);
                     });
         
-                    // بنبعت اسم الملف كمان عشان السيرفر يمنع تكراره
                     uploadedFilesData.push({ title: item.title, fileName: item.fileName, url: fileUrl });
                     completed++;
                 }
@@ -520,9 +511,21 @@
             }
         }
 
+        function addFileRow() {
+            const container = document.getElementById('filesContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'row g-2 mb-2 file-row';
+            newRow.innerHTML = `
+                <div class="col-md-5">
+                    <input type="text" class="form-control file-title" placeholder="عنوان الملف" required>
+                </div>
+                <div class="col-md-7">
+                    <input type="file" class="form-control file-input" required>
+                </div>
+            `;
+            container.appendChild(newRow);
+        }
 
-
-      
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
             const qIndex = container.children.length + 1;
@@ -761,30 +764,18 @@
                 `).join('');
             });
         }
-        // دالة ملء قائمة الأعوام الدراسية واختيار العام الحالي تلقائياً
 
-        // تشغيل الدالة أول ما الصفحة تحمل
-        // تشغيل الدوال أول ما الصفحة تحمل
+        // --- كود تغيير لون الهيدر عشوائياً ---
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- كود تغيير لون الهيدر عشوائياً ---
             const headerBox = document.querySelector('.header-box');
             if (headerBox) {
                 const randomHue = Math.floor(Math.random() * 360);
                 headerBox.style.background = `linear-gradient(135deg, hsl(${randomHue}, 80%, 40%), hsl(${randomHue}, 80%, 30%))`;
             }
-            // --------------------------------------
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- كود تغيير لون الهيدر عشوائياً ---
-            const headerBox = document.querySelector('.header-box');
-            if (headerBox) {
-                const randomHue = Math.floor(Math.random() * 360);
-                headerBox.style.background = `linear-gradient(135deg, hsl(${randomHue}, 80%, 40%), hsl(${randomHue}, 80%, 30%))`;
-            }
-            // --------------------------------------
+        });
 
-            // التحقق من وجود جلسة محفوظة للدكتور
+        // --- التحقق من وجود جلسة محفوظة للدكتور أول ما الصفحة تفتح ---
+        document.addEventListener('DOMContentLoaded', () => {
             const savedSession = localStorage.getItem('fnu_doctor_session');
             if (savedSession) {
                 try {
@@ -798,25 +789,10 @@
                     // تحميل المقررات في القوائم المنسدلة
                     loadCoursesDropdown();
                 } catch(e) {
-                    // لو حصل خطأ في قراءة البيانات المحفوظة، نمسحها عشان ميعملش أخطاء
                     localStorage.removeItem('fnu_doctor_session');
                 }
             }
         });
-        function addFileRow() {
-            const container = document.getElementById('filesContainer');
-            const newRow = document.createElement('div');
-            newRow.className = 'row g-2 mb-2 file-row';
-            newRow.innerHTML = `
-                <div class="col-md-5">
-                    <input type="text" class="form-control file-title" placeholder="عنوان الملف" required>
-                </div>
-                <div class="col-md-7">
-                    <input type="file" class="form-control file-input" required>
-                </div>
-            `;
-            container.appendChild(newRow);
-        }
- </script>
+    </script>
 </body>
 </html>
