@@ -29,7 +29,6 @@
         .home-btn:hover { background-color: #5a6268; color: white; }
         
         .question-item { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-
         
         /* تنسيق مربع المستويات */
         .levels-box { max-height: 120px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; background: #f8f9fa; }
@@ -216,7 +215,6 @@
             </div>
 
             <!-- 3. تاب متابعة المرفوعات -->
-            <!-- 3. تاب متابعة المرفوعات -->
             <div class="tab-pane fade" id="myuploads-pane" role="tabpanel">
                 <div class="table-container mb-4">
                     <h5 class="fw-bold text-primary mb-3">📂 المحاضرات والملفات المرفوعة</h5>
@@ -224,7 +222,27 @@
                         <div class="text-center text-muted p-3">جاري التحميل...</div>
                     </div>
                 </div>
-            <!-- 4. تاب نتائج الكويزات -->
+
+                <div class="table-container">
+                    <h5 class="fw-bold text-success mb-3">📝 الكويزات المرفوعة</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>عنوان الكويز</th>
+                                    <th>المقرر</th>
+                                    <th>عدد الأسئلة</th>
+                                    <th>تاريخ الرفع</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myQuizzesBody">
+                                <tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- 4. تاب نتائج الكويزات -->
             <div class="tab-pane fade" id="results-pane" role="tabpanel">
                 <div class="table-container">
@@ -443,7 +461,7 @@
                 
                 for (let item of filesToUpload) {
                     const sessionRes = await apiCall('createResumableSession', {
-                        fileName: item.fileName, // بنبعت الاسم الجديد (v2) عشان يتحفظ في الدرايف
+                        fileName: item.fileName,
                         mimeType: item.file.type, 
                         academicYear: year, 
                         level: level, 
@@ -733,10 +751,8 @@
             reader.readAsArrayBuffer(file);
         }
 
-
-
-
-                function loadMyUploads() {
+        function loadMyUploads() {
+            // تحميل الملفات
             const container = document.getElementById('myFilesContainer');
             container.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
@@ -747,25 +763,28 @@
                     res.courses.forEach(c => {
                         const files = JSON.parse(c.fileUrl);
                         
-                        let filesHtml = files.map(f => {
+                        let filesHtml = files.map((f, index) => {
                             let isHidden = f.isHidden === true;
                             let btnClass = isHidden ? 'btn-success' : 'btn-danger';
                             let btnText = isHidden ? '👁️ إظهار للطالب' : '🙈 إخفاء عن الطالب';
                             
+                            let displayName = f.title;
+                            if (!displayName || displayName === "undefined") displayName = f.fileName;
+                            if (!displayName || displayName === "undefined") displayName = "ملف بدون اسم";
+                            
                             return `
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
-                                        <span class="fw-bold">${f.title || f.fileName}</span>
+                                        <span class="fw-bold">${displayName}</span>
                                         ${isHidden ? '<span class="badge bg-secondary ms-2">مخفي</span>' : ''}
                                     </div>
-                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName}', this)">
+                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', ${index}, this)">
                                         ${btnText}
                                     </button>
                                 </li>
                             `;
                         }).join('');
 
-                        // شكل الكارت بتاع المقرر
                         html += `
                             <div class="card mb-3 shadow-sm border-0">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -790,7 +809,7 @@
                 }
             });
 
-            // كود تحميل الكويزات (سيبيه زي ما هو في آخر الدالة)
+            // تحميل الكويزات
             const quizzesBody = document.getElementById('myQuizzesBody');
             if (quizzesBody) {
                 quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
@@ -810,8 +829,9 @@
                 });
             }
         }
-        // دالة جديدة للإخفاء/الإظهار
-        function toggleFileVisibility(courseName, academicYear, fileName, btnElement) {
+
+        // دالة الإخفاء
+        function toggleFileVisibility(courseName, academicYear, fileIndex, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
             
@@ -819,14 +839,14 @@
                 nationalId: currentDoctor.nationalId,
                 courseName: courseName,
                 academicYear: academicYear,
-                fileName: fileName
+                fileIndex: fileIndex 
             }).then(res => {
                 if (res.success) {
-                    // نعيد تحميل القائمة عشان نحدث الشكل
-                    loadMyUploads();
+                    loadMyUploads(); 
                 } else {
                     alert("خطأ: " + res.message);
                     btnElement.disabled = false;
+                    btnElement.innerText = 'إعادة محاولة';
                 }
             });
         }
@@ -857,24 +877,39 @@
             });
         }
 
+        // دالة تحميل الإكسيل
+        function exportResultsToExcel() {
+            const table = document.getElementById('resultsTable');
+            if (!table) return;
+            const wb = XLSX.utils.table_to_book(table, {sheet: "النتائج"});
+            XLSX.writeFile(wb, 'نتائج_الكويزات.xlsx');
+        }
+
+        // دالة تحميل الـ PDF
+        function exportResultsToPDF() {
+            const element = document.getElementById('resultsTableContainer');
+            if (!element) return;
+            const opt = {
+                margin:       0.5,
+                filename:     'نتائج_الكويزات.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
         // --- نظام كشف التحديثات وتغيير اللون أوتوماتيك ---
         document.addEventListener('DOMContentLoaded', async () => {
-            
             try {
-                // جلب آخر كوميت من GitHub
                 const githubApiUrl = 'https://api.github.com/repos/y-abdulkawy/fnu_chemistry_microbiology/commits?path=doctor.html&page=1&per_page=1';
                 const response = await fetch(githubApiUrl);
-                
                 if (response.ok) {
                     const data = await response.json();
                     const latestCommitHash = data[0].sha.substring(0, 7); 
-                    
                     const savedCommitHash = localStorage.getItem('fnu_last_commit');
 
-                    // لو الكوميت مختلف (يعني فيه تحديث جديد)
                     if (savedCommitHash !== latestCommitHash) {
-                        
-                        // نغير اللون
                         const randomHue = Math.floor(Math.random() * 360);
                         const newColor = `linear-gradient(135deg, hsl(${randomHue}, 80%, 40%), hsl(${randomHue}, 80%, 30%))`;
                         
@@ -892,7 +927,6 @@
                 console.log("لم يتمكن من الاتصال بـ GitHub لجلب التحديثات.");
             }
 
-            // التحقق من وجود جلسة محفوظة للدكتور
             const savedSession = localStorage.getItem('fnu_doctor_session');
             if (savedSession) {
                 try {
@@ -908,35 +942,6 @@
                 }
             }
         });
-                // دالة تحميل الإكسيل
-        function exportResultsToExcel() {
-            const table = document.getElementById('resultsTable');
-            if (!table) return;
-            
-            // بنحول الجدول لملف إكسيل
-            const wb = XLSX.utils.table_to_book(table, {sheet: "النتائج"});
-            
-            // بنحفظ الملف
-            XLSX.writeFile(wb, 'نتائج_الكويزات.xlsx');
-        }
-
-        // دالة تحميل الـ PDF
-        function exportResultsToPDF() {
-            const element = document.getElementById('resultsTableContainer');
-            if (!element) return;
-            
-            // إعدادات شكل الـ PDF
-            const opt = {
-                margin:       0.5,
-                filename:     'نتائج_الكويزات.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // عشان الجدول عريض
-            };
-
-            // إنشاء الـ PDF وتحميله
-            html2pdf().set(opt).from(element).save();
-        }
     </script>
 </body>
 </html>
