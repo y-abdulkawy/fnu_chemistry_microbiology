@@ -792,8 +792,7 @@
                                     </div>
                                     <div>
                                         ${linkBtn}
-                                        <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url || ''}', '${f.fileName || ''}', '${f.title || ''}', this)">                                            ${btnText}
-                                        </button>
+                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName || ''}', '${f.title || ''}', this)">                                        </button>
                                     </div>
                                 </li>
                             `;
@@ -845,7 +844,14 @@
         }
 
         // دالة الإخفاء
-        function toggleFileVisibility(courseName, academicYear, fileUrl, fileName, fileTitle, btnElement) {
+
+
+
+
+
+        
+
+        function toggleFileVisibility(courseName, academicYear, fileName, fileTitle, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
             
@@ -853,7 +859,6 @@
                 nationalId: currentDoctor.nationalId,
                 courseName: courseName,
                 academicYear: academicYear,
-                targetUrl: fileUrl,
                 targetFileName: fileName,
                 targetTitle: fileTitle
             }).then(res => {
@@ -867,6 +872,12 @@
             });
         }
 
+
+
+
+        
+
+        
         function loadDoctorResults() {
             const tbody = document.getElementById('doctorResultsBody');
             tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
