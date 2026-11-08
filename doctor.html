@@ -279,7 +279,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script> 
     <script>
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
         let currentDoctor = null;
@@ -395,7 +395,6 @@
             
             const course = document.getElementById('upCourse').value; 
             
-            // حساب العام الدراسي أوتوماتيك في الخلفية
             const today = new Date();
             let currentYear = today.getFullYear();
             if (today.getMonth() < 8) { currentYear = currentYear - 1; }
@@ -408,36 +407,57 @@
         
             if (!course || selectedLevels.length === 0) return alert("اختر المقرر والمستوى أولاً");
         
-            // تجميع الملفات وفحص التكرار في نفس الشاشة
             const fileRows = document.querySelectorAll('.file-row');
             const filesToUpload = [];
-            const uniqueTitles = new Set();
-            const uniqueNames = new Set();
+            const uniqueHashes = new Set(); 
         
+            // 1. المرحلة الأولى: فحص الملفات محلياً (هل في نفس الملف متكرر في الشاشة؟)
             for (let row of fileRows) {
                 const title = row.querySelector('.file-title').value.trim();
                 const file = row.querySelector('.file-input').files[0];
                 if (!title || !file) return alert("تأكد من كتابة عنوان واختيار ملف لكل صف");
                 
-                if (uniqueTitles.has(title) || uniqueNames.has(file.name)) {
-                    return alert("⚠️ لا يمكنك إضافة نفس الملف أو نفس العنوان مرتين في نفس الشاشة.");
+                // استخراج بصمة الملف
+                const arrayBuffer = await file.arrayBuffer();
+                const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+                const fileHash = CryptoJS.SHA256(wordArray).toString();
+                
+                if (uniqueHashes.has(fileHash)) {
+                    return alert("⚠️ لا يمكنك إضافة نفس الملف أكثر من مرة في نفس الشاشة.");
                 }
-                uniqueTitles.add(title);
-                uniqueNames.add(file.name);
+                uniqueHashes.add(fileHash);
         
-                filesToUpload.push({ title: title, fileName: file.name, file: file });
+                filesToUpload.push({ title: title, fileName: file.name, fileHash: fileHash, file: file });
             }
         
             btn.disabled = true; 
-            alertDiv.className = 'd-none'; 
-            progressBox.classList.remove('d-none'); 
-            progressBar.style.width = '0%'; 
-            progressBar.innerText = 'جاري الرفع...';
+            alertDiv.className = 'alert alert-info mt-3 d-block'; 
+            alertDiv.innerText = 'جاري فحص الملفات على السيرفر...';
+            progressBox.classList.add('d-none');
         
             const uploadedFilesData = [];
             let completed = 0;
         
             try {
+                // 2. المرحلة الثانية: فحص الملفات على السيرفر قبل الرفع
+                for (let item of filesToUpload) {
+                    // نسأل السيرفر
+                    const checkRes = await apiCall('checkFileExists', { 
+                        nationalId: currentDoctor.nationalId, 
+                        courseName: course, 
+                        fileHash: item.fileHash 
+                    });
+
+                    if (checkRes.exists) {
+                        throw new Error("⚠️ الملف (" + item.title + ") موجود بالفعل على السيرفر (نفس المحتوى). يرجى عدم تكرار رفعه.");
+                    }
+                }
+
+                // 3. المرحلة الثالثة: الرفع الفعلي
+                progressBox.classList.remove('d-none'); 
+                progressBar.style.width = '0%'; 
+                progressBar.innerText = 'جاري الرفع...';
+                
                 for (let item of filesToUpload) {
                     const sessionRes = await apiCall('createResumableSession', {
                         fileName: item.file.name, mimeType: item.file.type, academicYear: year, level: level, courseName: course
@@ -471,10 +491,14 @@
                         xhr.send(item.file);
                     });
         
-                    uploadedFilesData.push({ title: item.title, fileName: item.fileName, url: fileUrl });
+                    uploadedFilesData.push({ title: item.title, fileName: item.fileName, fileHash: item.fileHash, url: fileUrl });
                     completed++;
                 }
         
+                // 4. حفظ البيانات في الشيت
+                alertDiv.className = 'alert alert-info mt-3 d-block'; 
+                alertDiv.innerText = 'جاري حفظ البيانات...';
+
                 const saveRes = await apiCall('saveDirectUploadMetadata', {
                     payload: {
                         courseName: course, 
@@ -511,6 +535,7 @@
             }
         }
 
+        
         function addFileRow() {
             const container = document.getElementById('filesContainer');
             const newRow = document.createElement('div');
