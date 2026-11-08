@@ -792,8 +792,7 @@
                                     </div>
                                     <div>
                                         ${linkBtn}
-                                        <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url}', this)">
-                                            ${btnText}
+                                        <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url || ''}', '${f.fileName || ''}', '${f.title || ''}', this)">                                            ${btnText}
                                         </button>
                                     </div>
                                 </li>
@@ -846,7 +845,7 @@
         }
 
         // دالة الإخفاء
-        function toggleFileVisibility(courseName, academicYear, fileIndex, btnElement) {
+        function toggleFileVisibility(courseName, academicYear, fileUrl, fileName, fileTitle, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
             
@@ -854,7 +853,9 @@
                 nationalId: currentDoctor.nationalId,
                 courseName: courseName,
                 academicYear: academicYear,
-                fileIndex: fileIndex 
+                targetUrl: fileUrl,
+                targetFileName: fileName,
+                targetTitle: fileTitle
             }).then(res => {
                 if (res.success) {
                     loadMyUploads(); 
