@@ -763,7 +763,8 @@
                     res.courses.forEach(c => {
                         const files = JSON.parse(c.fileUrl);
                         
-                        let filesHtml = files.map((f, index) => {
+
+                                                let filesHtml = files.map((f, index) => {
                             let isHidden = f.isHidden === true;
                             let btnClass = isHidden ? 'btn-success' : 'btn-danger';
                             let btnText = isHidden ? '👁️ إظهار للطالب' : '🙈 إخفاء عن الطالب';
@@ -772,19 +773,24 @@
                             if (!displayName || displayName === "undefined") displayName = f.fileName;
                             if (!displayName || displayName === "undefined") displayName = "ملف بدون اسم";
                             
+                            // لو مفيش رابط، منعرضش الزرار
+                            let linkBtn = f.url ? `<a href="${f.url}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold ms-2">🔗 فتح</a>` : '';
+
                             return `
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <span class="fw-bold">${displayName}</span>
                                         ${isHidden ? '<span class="badge bg-secondary ms-2">مخفي</span>' : ''}
                                     </div>
-                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url}', this)">
-                                        ${btnText}
-                                    </button>
+                                    <div>
+                                        ${linkBtn}
+                                        <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url}', this)">
+                                            ${btnText}
+                                        </button>
+                                    </div>
                                 </li>
                             `;
                         }).join('');
-
                         html += `
                             <div class="card mb-3 shadow-sm border-0">
                                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
