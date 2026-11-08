@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -257,11 +258,18 @@
             </div>
 
             <!-- 4. تاب نتائج الكويزات -->
+            <!-- 4. تاب نتائج الكويزات -->
             <div class="tab-pane fade" id="results-pane" role="tabpanel">
                 <div class="table-container">
-                    <h5 class="fw-bold text-success mb-3">📊 نتائج الطلاب في الكويزات</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-success mb-0">📊 نتائج الطلاب في الكويزات</h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-success fw-bold me-2" onclick="exportResultsToExcel()">📥 تحميل Excel</button>
+                            <button class="btn btn-sm btn-outline-danger fw-bold" onclick="exportResultsToPDF()">📄 تحميل PDF</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive" id="resultsTableContainer">
+                        <table class="table table-hover align-middle" id="resultsTable">
                             <thead class="table-light">
                                 <tr>
                                     <th>التاريخ</th>
@@ -872,6 +880,35 @@
                 }
             }
         });
+                // دالة تحميل الإكسيل
+        function exportResultsToExcel() {
+            const table = document.getElementById('resultsTable');
+            if (!table) return;
+            
+            // بنحول الجدول لملف إكسيل
+            const wb = XLSX.utils.table_to_book(table, {sheet: "النتائج"});
+            
+            // بنحفظ الملف
+            XLSX.writeFile(wb, 'نتائج_الكويزات.xlsx');
+        }
+
+        // دالة تحميل الـ PDF
+        function exportResultsToPDF() {
+            const element = document.getElementById('resultsTableContainer');
+            if (!element) return;
+            
+            // إعدادات شكل الـ PDF
+            const opt = {
+                margin:       0.5,
+                filename:     'نتائج_الكويزات.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' } // عشان الجدول عريض
+            };
+
+            // إنشاء الـ PDF وتحميله
+            html2pdf().set(opt).from(element).save();
+        }
     </script>
 </body>
 </html>
