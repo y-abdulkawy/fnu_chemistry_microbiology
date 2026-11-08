@@ -702,8 +702,29 @@
         // دالة ملء قائمة الأعوام الدراسية واختيار العام الحالي تلقائياً
 
         // تشغيل الدالة أول ما الصفحة تحمل
+        // تشغيل الدوال أول ما الصفحة تحمل
         document.addEventListener('DOMContentLoaded', () => {
-            populateUpYears();
+            // 1. تشغيل دالة ملء الأعوام الدراسية
+            populateUpYears(); 
+
+            // 2. التحقق من وجود جلسة محفوظة للدكتور
+            const savedSession = localStorage.getItem('fnu_doctor_session');
+            if (savedSession) {
+                try {
+                    currentDoctor = JSON.parse(savedSession);
+                    
+                    // تخطي شاشة الدخول والدخول للوحة التحكم مباشرة
+                    document.getElementById('loginScreen').classList.add('d-none');
+                    document.getElementById('dashboardScreen').classList.remove('d-none');
+                    document.getElementById('docWelcome').innerText = `مرحباً د. ${currentDoctor.name} (${currentDoctor.dept})`;
+                    
+                    // تحميل المقررات في القوائم المنسدلة
+                    loadCoursesDropdown();
+                } catch(e) {
+                    // لو حصل خطأ في قراءة البيانات المحفوظة، نمسحها عشان ميعملش أخطاء
+                    localStorage.removeItem('fnu_doctor_session');
+                }
+            }
         });
     </script>
 </body>
