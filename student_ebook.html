@@ -7,6 +7,20 @@
     <title>جامعة الفيوم الأهلية - منصة الطالب</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <style>
+                /* تنسيقات شاشة الكويز المقسومة */
+        .quiz-tabs-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; }
+        .quiz-tab-btn { padding: 10px 20px; border-radius: 8px; background: #fff; border: 2px solid #dee2e6; font-weight: bold; color: #555; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+        .quiz-tab-btn:hover { background: #f8f9fa; }
+        .quiz-tab-btn.active { background: #0d6efd; color: white; border-color: #0d6efd; }
+        
+        .quiz-layout { display: flex; gap: 20px; flex-wrap: wrap; }
+        .quiz-sidebar { flex: 0 0 250px; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; }
+        .quiz-main { flex: 1; min-width: 300px; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        
+        @media (max-width: 768px) {
+            .quiz-layout { flex-direction: column; }
+            .quiz-sidebar { flex: auto; }
+        }
         .home-btn { position: fixed; top: 15px; right: 15px; z-index: 9999; background-color: #6c757d; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; display: flex; align-items: center; gap: 8px; }
         .home-btn:hover { background-color: #5a6268; color: white; transform: translateY(-2px); }
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 40px; }
@@ -227,9 +241,27 @@
                 </div>
 
                 <!-- 2. تاب الكويزات -->
+                <!-- 2. تاب الكويزات -->
                 <div class="tab-pane fade" id="quizzes-pane" role="tabpanel">
-                    <div id="studentQuizzesList">
-                        <div class="text-center text-muted p-4">جاري تحميل الكويزات...</div>
+                    <div id="quizTabsContainer" class="quiz-tabs-container"></div>
+                    
+                    <div id="quizContentArea" class="d-none">
+                        <div class="quiz-layout">
+                            <!-- الشمال: السؤال -->
+                            <div class="quiz-main" id="quizMainArea">
+                                <!-- السؤال بيتحط هنا -->
+                            </div>
+                            <!-- اليمين: شبكة الأسئلة -->
+                            <div class="quiz-sidebar" id="quizSidebarArea">
+                                <h6 class="fw-bold mb-3 text-center">الأسئلة</h6>
+                                <div class="quiz-grid" id="activeQuizGrid"></div>
+                                <div class="mt-3 text-center text-muted small">لون أخضر يعني تم الإجابة</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="noQuizzesMsg" class="text-center text-muted p-4 d-none">
+                        لا توجد كويزات متاحة حالياً.
                     </div>
                 </div>
 
@@ -712,48 +744,280 @@
 
         // ---------------- الكويزات ----------------
         window.LOADED_QUIZZES = [];
+       
+
+        window.LOADED_QUIZZES = [];
+        let currentQuizIndex = -1;
+        let quizState = {}; 
+
         function loadStudentQuizzes() {
-            const container = document.getElementById('studentQuizzesList');
-            container.innerHTML = '<div class="text-center text-muted p-4">جاري التحميل...</div>';
+            const tabsContainer = document.getElementById('quizTabsContainer');
+            const contentArea = document.getElementById('quizContentArea');
+            const noQuizzesMsg = document.getElementById('noQuizzesMsg');
             
+            tabsContainer.innerHTML = '<div class="text-center text-muted w-100">جاري التحميل...</div>';
+            contentArea.classList.add('d-none');
+            noQuizzesMsg.classList.add('d-none');
+
             apiCall('fetchQuizzesForStudent', { nationalId: currentUser.user.nationalId }).then(res => {
-                if (!res.success) { container.innerHTML = `<div class="alert alert-danger">${res.message}</div>`; return; }
-                if (res.quizzes.length === 0) { container.innerHTML = '<div class="alert alert-info text-center">لا توجد كويزات متاحة حالياً.</div>'; return; }
+                if (!res.success || res.quizzes.length === 0) { 
+                    tabsContainer.innerHTML = '';
+                    noQuizzesMsg.classList.remove('d-none');
+                    return; 
+                }
 
-                window.LOADED_QUIZZES = res.quizzes; quizState = {}; 
+                window.LOADED_QUIZZES = res.quizzes; 
+                quizState = {}; 
+                tabsContainer.innerHTML = '';
 
-                container.innerHTML = res.quizzes.map((quiz, qIndex) => {
-                    quizState[qIndex] = { current: 0, answers: {} };
-                    return `
-                    <div class="main-card p-4 mb-4 quiz-card" id="quiz_card_${qIndex}">
-                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-3">
-                            <h5 class="fw-bold text-success mb-0">${quiz.quizTitle}</h5>
-                            <span class="badge bg-secondary">${quiz.courseName} - د. ${quiz.doctorName}</span>
-                        </div>
-                        <div class="quiz-grid" id="grid_${qIndex}">${quiz.questions.map((q, i) => `<div class="grid-box" id="box_${qIndex}_${i}" onclick="jumpToQuestion(${qIndex}, ${i})">${i + 1}</div>`).join('')}</div>
-                        <div id="questions_area_${qIndex}">
-                            ${quiz.questions.map((q, i) => `
-                                <div class="question-block ${i === 0 ? 'active' : ''}" id="qblock_${qIndex}_${i}">
-                                    <p class="fw-bold fs-5 mb-3">${i + 1}. ${q.question} <span class="badge bg-dark float-end">${q.grade} درجات</span></p>
-                                    <div class="options-container">
-                                        ${q.options.map((opt, oIdx) => `
-                                            <div class="form-check mb-2 p-3 bg-light rounded border">
-                                                <input class="form-check-input ms-2" type="radio" name="q_${qIndex}_${i}" value="${oIdx + 1}" id="opt_${qIndex}_${i}_${oIdx}" onchange="saveAnswer(${qIndex}, ${i}, ${oIdx + 1})">
-                                                <label class="form-check-label w-100" for="opt_${qIndex}_${i}_${oIdx}" style="cursor:pointer;">${opt}</label>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>`).join('')}
-                        </div>
-                        <div class="d-flex justify-content-between mt-4 border-top pt-3">
-                            <button type="button" class="btn btn-outline-secondary fw-bold" id="prev_btn_${qIndex}" onclick="prevQuestion(${qIndex})">⬅️ السابق</button>
-                            <button type="button" class="btn btn-success fw-bold" onclick="submitQuizWizard(${qIndex}, this)">🚀 تسليم الكويز</button>
-                            <button type="button" class="btn btn-primary fw-bold" id="next_btn_${qIndex}" onclick="nextQuestion(${qIndex})">التالي ➡️</button>
-                        </div>
-                    </div>`}).join('');
-                res.quizzes.forEach((_, idx) => updateQuizUI(idx));
+                // 1. عمل أزرار أسماء الكويزات
+                res.quizzes.forEach((quiz, idx) => {
+                    quizState[idx] = { current: 0, answers: {} };
+                    const btn = document.createElement('button');
+                    btn.className = `quiz-tab-btn ${idx === 0 ? 'active' : ''}`;
+                    btn.id = `quiz_tab_btn_${idx}`;
+                    btn.innerHTML = `📝 ${quiz.quizTitle}`;
+                    btn.onclick = () => selectQuiz(idx);
+                    tabsContainer.appendChild(btn);
+                });
+
+                // 2. اختيار الكويز الأول أوتوماتيك
+                selectQuiz(0);
             });
         }
+
+        // دالة اختيار الكويز وتفعيله
+        function selectQuiz(quizIndex) {
+            currentQuizIndex = quizIndex;
+            
+            // تحديث شكل الأزرار
+            document.querySelectorAll('.quiz-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`quiz_tab_btn_${quizIndex}`).classList.add('active');
+            
+            document.getElementById('quizContentArea').classList.remove('d-none');
+            
+            renderQuizView();
+        }
+
+        // دالة رسم الكويز المختار
+        function renderQuizView() {
+            const quiz = window.LOADED_QUIZZES[currentQuizIndex];
+            const state = quizState[currentQuizIndex];
+            
+            // 1. رسم شبكة الأرقام (على الجنب)
+            const grid = document.getElementById('activeQuizGrid');
+            grid.innerHTML = quiz.questions.map((q, i) => `
+                <div class="grid-box ${i === state.current ? 'active' : ''} ${state.answers[i] !== undefined ? 'answered' : ''}" 
+                     id="box_${i}" onclick="jumpToQuestion(${i})">${i + 1}</div>
+            `).join('');
+
+            // 2. رسم السؤال (في النص)
+            const mainArea = document.getElementById('quizMainArea');
+            
+            // لو الكويز متسلم خلاص (عشان ميعملش ريفرش للنتيجة)
+            if (document.getElementById(`quiz_submitted_${currentQuizIndex}`)) {
+                mainArea.innerHTML = document.getElementById(`quiz_submitted_${currentQuizIndex}`).innerHTML;
+                return;
+            }
+
+            let questionsHtml = quiz.questions.map((q, i) => `
+                <div class="question-block ${i === state.current ? 'active' : ''}" id="qblock_${i}">
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <h5 class="fw-bold text-success mb-0">${quiz.quizTitle}</h5>
+                        <span class="badge bg-secondary">${quiz.courseName} - د. ${quiz.doctorName}</span>
+                    </div>
+                    <p class="fw-bold fs-5 mb-3">${i + 1}. ${q.question} <span class="badge bg-dark float-end">${q.grade} درجات</span></p>
+                    <div class="options-container">
+                        ${q.options.map((opt, oIdx) => `
+                            <div class="form-check mb-2 p-3 bg-light rounded border">
+                                <input class="form-check-input ms-2" type="radio" name="q_${i}" value="${oIdx + 1}" id="opt_${i}_${oIdx}" 
+                                    ${state.answers[i] === (oIdx + 1) ? 'checked' : ''} onchange="saveAnswer(${i}, ${oIdx + 1})">
+                                <label class="form-check-label w-100" for="opt_${i}_${oIdx}" style="cursor:pointer;">${opt}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            mainArea.innerHTML = `
+                <div id="questions_area">${questionsHtml}</div>
+                <div class="d-flex justify-content-between mt-4 border-top pt-3">
+                    <button type="button" class="btn btn-outline-secondary fw-bold" id="prev_btn" onclick="prevQuestion()" ${state.current === 0 ? 'disabled' : ''}>⬅️ السابق</button>
+                    <button type="button" class="btn btn-success fw-bold" onclick="submitQuizWizard(this)">🚀 تسليم الكويز</button>
+                    <button type="button" class="btn btn-primary fw-bold" id="next_btn" onclick="nextQuestion()" style="visibility: ${state.current === quiz.questions.length - 1 ? 'hidden' : 'visible'}">التالي ➡️</button>
+                </div>
+            `;
+        }
+
+        function updateQuizUI() {
+            const state = quizState[currentQuizIndex]; 
+            const totalQuestions = window.LOADED_QUIZZES[currentQuizIndex].questions.length;
+            
+            // تحديث السؤال الظاهر
+            for (let i = 0; i < totalQuestions; i++) {
+                const block = document.getElementById(`qblock_${i}`);
+                if(block) block.classList.toggle('active', i === state.current);
+            }
+            
+            // تحديث شبكة الأرقام
+            for (let i = 0; i < totalQuestions; i++) {
+                const box = document.getElementById(`box_${i}`);
+                if (box) {
+                    box.classList.remove('active', 'answered');
+                    if (i === state.current) box.classList.add('active');
+                    if (state.answers[i] !== undefined) box.classList.add('answered');
+                }
+            }
+            
+            // تحديث أزرار التنقل
+            const prevBtn = document.getElementById('prev_btn');
+            const nextBtn = document.getElementById('next_btn');
+            if(prevBtn) prevBtn.disabled = (state.current === 0);
+            if(nextBtn) nextBtn.style.visibility = (state.current === totalQuestions - 1) ? 'hidden' : 'visible';
+        }
+
+        function saveAnswer(questionIndex, answerValue) { 
+            quizState[currentQuizIndex].answers[questionIndex] = answerValue; 
+            updateQuizUI(); 
+        }
+        
+        function nextQuestion() { 
+            const state = quizState[currentQuizIndex];
+            if (state.current < window.LOADED_QUIZZES[currentQuizIndex].questions.length - 1) { 
+                state.current++; 
+                updateQuizUI(); 
+            } 
+        }
+        
+        function prevQuestion() { 
+            const state = quizState[currentQuizIndex];
+            if (state.current > 0) { 
+                state.current--; 
+                updateQuizUI(); 
+            } 
+        }
+        
+        function jumpToQuestion(questionIndex) { 
+            quizState[currentQuizIndex].current = questionIndex; 
+            updateQuizUI(); 
+        }
+
+        // تعديل دالة التسليم عشان تشتغل مع الشكل الجديد
+        function submitQuizWizard(btn) {
+            const quiz = window.LOADED_QUIZZES[currentQuizIndex]; 
+            const state = quizState[currentQuizIndex]; 
+            const totalQuestions = quiz.questions.length;
+            let answeredCount = Object.keys(state.answers).length; 
+            let unansweredCount = totalQuestions - answeredCount;
+            
+            if (unansweredCount > 0) { 
+                if (!confirm(`⚠️ تنبيه: لم تجب على ${unansweredCount} سؤال.\nهل أنت متأكد من التسليم؟`)) return; 
+            } else { 
+                if (!confirm(`هل أنت متأكد من تسليم الكويز؟`)) return; 
+            }
+
+            let correctCount = 0, totalGrades = 0, earnedGrades = 0;
+            quiz.questions.forEach((q, idx) => { 
+                totalGrades += q.grade; 
+                if (state.answers[idx] !== undefined && parseInt(state.answers[idx]) === q.correctAnswer) { 
+                    correctCount++; 
+                    earnedGrades += q.grade; 
+                } 
+            });
+            
+            const percentage = totalGrades > 0 ? (earnedGrades / totalGrades) * 100 : 0;
+            btn.disabled = true; btn.innerText = 'جاري التسليم...';
+            
+            apiCall('saveQuizResult', { 
+                payload: { 
+                    studentName: currentUser.user.fullName, nationalId: currentUser.user.nationalId, 
+                    courseName: quiz.courseName, doctorName: quiz.doctorName, quizTitle: quiz.quizTitle, 
+                    earnedGrades: earnedGrades, totalGrades: totalGrades, percentage: percentage.toFixed(1) 
+                } 
+            }).then(res => {
+                // حفظ شكل النتيجة عشان يفضل ظاهر لو رجع للكويز تاني
+                const mainArea = document.getElementById('quizMainArea');
+                const resultHtml = `
+                    <div class="alert alert-success mt-4 text-center border-success shadow-sm">
+                        <h4 class="fw-bold mb-2">🎉 تم تسليم الكويز بنجاح!</h4>
+                        <h5 class="mb-3">الدرجة: <span class="badge bg-success fs-4">${earnedGrades} / ${totalGrades}</span> (${percentage.toFixed(1)}%)</h5>
+                        <p class="text-muted mb-3">عدد الإجابات الصحيحة: ${correctCount} من أصل ${totalQuestions}</p>
+                        <button type="button" class="btn btn-primary fw-bold px-4" onclick="printQuizResult()">🖨️ طباعة النتيجة</button>
+                    </div>
+                `;
+                
+                // بنخزن الشكل في ديف مخفي عشان نرجعه لو دخل تاني
+                let hiddenDiv = document.getElementById(`quiz_submitted_${currentQuizIndex}`);
+                if(!hiddenDiv) {
+                    hiddenDiv = document.createElement('div');
+                    hiddenDiv.id = `quiz_submitted_${currentQuizIndex}`;
+                    hiddenDiv.style.display = 'none';
+                    document.body.appendChild(hiddenDiv);
+                }
+                hiddenDiv.innerHTML = resultHtml;
+
+                mainArea.innerHTML = resultHtml;
+                mainArea.querySelectorAll('input, button').forEach(el => el.disabled = true);
+            });
+        }
+
+        // تعديل دالة الطباعة عشان تاخد الكويز الحالي
+        function printQuizResult() {
+            const quiz = window.LOADED_QUIZZES[currentQuizIndex];
+            const state = quizState[currentQuizIndex];
+            const studentName = currentUser.user.fullName;
+            
+            let correctCount = 0, totalGrades = 0, earnedGrades = 0;
+            quiz.questions.forEach((q, idx) => {
+                totalGrades += q.grade;
+                if (state.answers[idx] !== undefined && parseInt(state.answers[idx]) === q.correctAnswer) { correctCount++; earnedGrades += q.grade; }
+            });
+            const percentage = totalGrades > 0 ? (earnedGrades / totalGrades) * 100 : 0;
+
+            let printContent = `
+                <html dir="rtl" lang="ar"><head><title>نتيجة كويز - ${quiz.quizTitle}</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 20px; background: #fff; color: #000; }
+                        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #0d6efd; padding-bottom: 10px; }
+                        .header h2 { margin: 0 0 5px 0; color: #0d6efd; }
+                        .info { margin-bottom: 20px; font-size: 16px; background: #f8f9fa; padding: 15px; border-radius: 8px; }
+                        .grade-box { font-size: 20px; font-weight: bold; color: #198754; margin: 20px 0; text-align: center; border: 2px solid #198754; padding: 15px; border-radius: 8px; background: #e8f5e9; }
+                        .question-box { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 8px; page-break-inside: avoid; }
+                        .q-text { font-weight: bold; margin-bottom: 10px; font-size: 16px; }
+                        .answer { margin: 5px 0; font-size: 15px; padding: 5px; border-radius: 4px; }
+                        .correct { color: #198754; background: #e8f5e9; font-weight: bold; }
+                        .wrong { color: #dc3545; background: #f8d7da; font-weight: bold; }
+                        .neutral { color: #333; }
+                    </style></head><body>
+                    <div class="header"><h2>جامعة الفيوم الأهلية</h2><h4>تقرير نتيجة الكويز</h4></div>
+                    <div class="info">
+                        <p><strong>الطالب:</strong> ${studentName}</p><p><strong>الرقم القومي:</strong> ${currentUser.user.nationalId}</p>
+                        <p><strong>المقرر:</strong> ${quiz.courseName}</p><p><strong>عنوان الكويز:</strong> ${quiz.quizTitle}</p>
+                    </div>
+                    <div class="grade-box">الدرجة: ${earnedGrades} / ${totalGrades} (${percentage.toFixed(1)}%)</div>
+                    <h3>تفاصيل الإجابات:</h3>`;
+
+            quiz.questions.forEach((q, idx) => {
+                const studentAnswer = state.answers[idx]; const correctAnswer = q.correctAnswer;
+                printContent += `<div class="question-box"><div class="q-text">${idx + 1}. ${q.question}</div>`;
+                q.options.forEach((opt, oIdx) => {
+                    const optNum = oIdx + 1; let className = "neutral"; let icon = "";
+                    if (optNum === correctAnswer) { className = "correct"; icon = "✅ "; } 
+                    else if (optNum === parseInt(studentAnswer) && studentAnswer !== correctAnswer) { className = "wrong"; icon = "❌ "; }
+                    printContent += `<div class="answer ${className}">${icon}${opt}</div>`;
+                });
+                printContent += `</div>`;
+            });
+
+            printContent += `</body></html>`;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => { printWindow.print(); }, 500);
+        }
+
+        
 
         function updateQuizUI(qIndex) {
             const state = quizState[qIndex]; const totalQuestions = window.LOADED_QUIZZES[qIndex].questions.length;
