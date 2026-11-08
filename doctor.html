@@ -302,6 +302,9 @@
                 
                 if (res.success && res.role === "doctor") {
                     currentDoctor = res.user;
+                    // حفظ بيانات الدكتور في المتصفح
+                    localStorage.setItem('fnu_doctor_session', JSON.stringify(res.user));
+                    
                     document.getElementById('loginScreen').classList.add('d-none');
                     document.getElementById('dashboardScreen').classList.remove('d-none');
                     document.getElementById('docWelcome').innerText = `مرحباً د. ${res.user.name} (${res.user.dept})`;
@@ -318,6 +321,8 @@
 
         function logoutDoctor() {
             currentDoctor = null;
+             // مسح بيانات الدكتور من المتصفح عند الخروج
+            localStorage.removeItem('fnu_doctor_session');
             document.getElementById('dashboardScreen').classList.add('d-none');
             document.getElementById('loginScreen').classList.remove('d-none');
             document.getElementById('docNationalId').value = '';
