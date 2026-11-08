@@ -827,8 +827,7 @@
                     <div class="options-container">
                         ${q.options.map((opt, oIdx) => `
                             <div class="form-check mb-2 p-3 bg-light rounded border">
-                                <input class="form-check-input ms-2" type="radio" name="q_${i}" value="${oIdx + 1}" id="opt_${i}_${oIdx}" 
-                                    ${state.answers[i] === (oIdx + 1) ? 'checked' : ''} onchange="saveAnswer(${i}, ${oIdx + 1})">
+                                <input class="form-check-input ms-2" type="radio" name="q_${i}" value="${oIdx + 1}" id="opt_${i}_${oIdx}" ${state.answers[i] === (oIdx + 1) ? 'checked' : ''}>
                                 <label class="form-check-label w-100" for="opt_${i}_${oIdx}" style="cursor:pointer;">${opt}</label>
                             </div>
                         `).join('')}
@@ -885,7 +884,25 @@
         }
 
         function saveCurrentAnswer() {
-            alert("✅ تم حفظ إجابتك.");
+            const currentQ = quizState[currentQuizIndex].current;
+            // بندور على الاختيار اللي الطالب داس عليه
+            const selectedOption = document.querySelector(`input[name="q_${currentQ}"]:checked`);
+            
+            if (selectedOption) {
+                // بنحفظ الإجابة
+                quizState[currentQuizIndex].answers[currentQ] = parseInt(selectedOption.value);
+                // بنحدث الشبكة عشان السؤال يتلون بالأخضر
+                updateQuizUI(); 
+                // ممكن نغير شكل الزرار شوية عشان يطمن
+                event.target.classList.add('btn-success');
+                event.target.classList.remove('btn-info');
+                setTimeout(() => {
+                    event.target.classList.remove('btn-success');
+                    event.target.classList.add('btn-info');
+                }, 1000);
+            } else {
+                alert("⚠️ Please select an answer first.");
+            }
         }
 
         function toggleFlag(index) {
