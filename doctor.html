@@ -84,7 +84,7 @@
             <div class="tab-pane fade show active" id="upload-pane" role="tabpanel">
                 <div class="table-container">
                     <h5 class="fw-bold text-primary mb-3">رفع محاضرة / ملف جديد</h5>
-                    <form id="uploadForm" onsubmit="handleFileUpload(event)">
+                    <form id="uploadForm" onsubmit="(event)">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">المقرر:</label>
@@ -394,10 +394,6 @@
         }
 
 
-
-
-
-
         async function handleFileUpload(e) {
             e.preventDefault();
             const btn = document.getElementById('upBtn');
@@ -407,13 +403,11 @@
             
             const course = document.getElementById('upCourse').value; 
             
-            // حساب العام الدراسي أوتوماتيك
             const today = new Date();
             let currentYear = today.getFullYear();
             if (today.getMonth() < 8) { currentYear = currentYear - 1; }
             const year = currentYear + '-' + (currentYear + 1);
         
-            // تجميع المستويات
             const checkboxes = document.querySelectorAll('.up-lvl-chk:checked');
             let selectedLevels = [];
             checkboxes.forEach(cb => selectedLevels.push(cb.value));
@@ -421,14 +415,25 @@
         
             if (!course || selectedLevels.length === 0) return alert("اختر المقرر والمستوى أولاً");
         
-            // تجميع الملفات
+            // تجميع الملفات وفحص التكرار في نفس الشاشة
             const fileRows = document.querySelectorAll('.file-row');
             const filesToUpload = [];
+            const uniqueTitles = new Set();
+            const uniqueNames = new Set();
+        
             for (let row of fileRows) {
                 const title = row.querySelector('.file-title').value.trim();
                 const file = row.querySelector('.file-input').files[0];
                 if (!title || !file) return alert("تأكد من كتابة عنوان واختيار ملف لكل صف");
-                filesToUpload.push({ title: title, file: file });
+                
+                // فحص التكرار
+                if (uniqueTitles.has(title) || uniqueNames.has(file.name)) {
+                    return alert("⚠️ لا يمكنك إضافة نفس الملف أو نفس العنوان مرتين في نفس الشاشة.");
+                }
+                uniqueTitles.add(title);
+                uniqueNames.add(file.name);
+        
+                filesToUpload.push({ title: title, fileName: file.name, file: file });
             }
         
             btn.disabled = true; 
@@ -441,16 +446,13 @@
             let completed = 0;
         
             try {
-                // بنلف على كل ملف ونرفعه
                 for (let item of filesToUpload) {
-                    // 1. إنشاء جلسة الرفع
                     const sessionRes = await apiCall('createResumableSession', {
                         fileName: item.file.name, mimeType: item.file.type, academicYear: year, level: level, courseName: course
                     });
         
                     if (!sessionRes.success) throw new Error(sessionRes.message);
         
-                    // 2. رفع الملف لـ Google Drive (عن طريق Cloudflare)
                     const fileUrl = await new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
                         const uploadProxyUrl = API_URL + '/upload?url=' + encodeURIComponent(sessionRes.uploadUrl);
@@ -477,17 +479,17 @@
                         xhr.send(item.file);
                     });
         
-                    uploadedFilesData.push({ title: item.title, url: fileUrl });
+                    // بنبعت اسم الملف كمان عشان السيرفر يمنع تكراره
+                    uploadedFilesData.push({ title: item.title, fileName: item.fileName, url: fileUrl });
                     completed++;
                 }
         
-                // 3. حفظ كل الملفات في الشيت مرة واحدة
                 const saveRes = await apiCall('saveDirectUploadMetadata', {
                     payload: {
                         courseName: course, 
                         academicYear: year, 
                         level: level, 
-                        files: uploadedFilesData, // بنبعت المصفوفة
+                        files: uploadedFilesData, 
                         doctor: currentDoctor
                     }
                 });
@@ -496,15 +498,14 @@
                 
                 if (saveRes.success) {
                     alertDiv.className = 'alert alert-success mt-3 d-block'; 
-                    alertDiv.innerText = '✅ تم رفع جميع الملفات بنجاح!';
+                    alertDiv.innerText = '✅ ' + saveRes.message;
                     document.getElementById('uploadForm').reset();
                     document.getElementById('upLevelBox').innerHTML = '<span class="text-muted small">اختر المقرر أولاً...</span>';
                     
-                    // نرجع الصفوف لصف واحد بس بعد الرفع
                     const container = document.getElementById('filesContainer');
                     container.innerHTML = `
                         <div class="row g-2 mb-2 file-row">
-                            <div class="col-md-5"><input type="text" class="form-control file-title" placeholder="عنوان الملف (مثال: المحاضرة الأولى - جزء 1)" required></div>
+                            <div class="col-md-5"><input type="text" class="form-control file-title" placeholder="عنوان الملف" required></div>
                             <div class="col-md-7"><input type="file" class="form-control file-input" required></div>
                         </div>
                     `;
@@ -518,8 +519,10 @@
                 alertDiv.innerText = err.message;
             }
         }
-    
 
+
+
+      
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
             const qIndex = container.children.length + 1;
