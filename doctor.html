@@ -216,47 +216,14 @@
             </div>
 
             <!-- 3. تاب متابعة المرفوعات -->
+            <!-- 3. تاب متابعة المرفوعات -->
             <div class="tab-pane fade" id="myuploads-pane" role="tabpanel">
                 <div class="table-container mb-4">
                     <h5 class="fw-bold text-primary mb-3">📂 المحاضرات والملفات المرفوعة</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>المقرر</th>
-                                    <th>العام</th>
-                                    <th>المستوى</th>
-                                    <th>عدد الملفات</th>
-                                    <th>آخر تحديث</th>
-                                </tr>
-                            </thead>
-                            <tbody id="myFilesBody">
-                                <tr><td colspan="5" class="text-center text-muted">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
+                    <div id="myFilesContainer">
+                        <div class="text-center text-muted p-3">جاري التحميل...</div>
                     </div>
                 </div>
-
-                <div class="table-container">
-                    <h5 class="fw-bold text-success mb-3">📝 الكويزات المرفوعة</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>عنوان الكويز</th>
-                                    <th>المقرر</th>
-                                    <th>عدد الأسئلة</th>
-                                    <th>تاريخ الرفع</th>
-                                </tr>
-                            </thead>
-                            <tbody id="myQuizzesBody">
-                                <tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
             <!-- 4. تاب نتائج الكويزات -->
             <!-- 4. تاب نتائج الكويزات -->
             <div class="tab-pane fade" id="results-pane" role="tabpanel">
@@ -766,63 +733,83 @@
             reader.readAsArrayBuffer(file);
         }
 
-         function loadMyUploads() {
-            const filesBody = document.getElementById('myFilesBody');
-            filesBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">جاري التحميل...</td></tr>';
+
+
+
+                function loadMyUploads() {
+            const container = document.getElementById('myFilesContainer');
+            container.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
             apiCall('fetchCoursesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
                 if (res.success && res.courses.length > 0) {
-                    filesBody.innerHTML = res.courses.map(c => {
-                        // بنفك الملفات من الـ JSON
+                    let html = '';
+                    
+                    res.courses.forEach(c => {
                         const files = JSON.parse(c.fileUrl);
                         
-                        // بنعمل قائمة بالملفات وجنب كل واحد زرار
-                        const filesListHtml = files.map(f => `
-                            <div class="d-flex justify-content-between align-items-center mb-1 bg-white p-1 rounded border">
-                                <span class="text-truncate" style="max-width: 150px;" title="${f.title || f.fileName}">
-                                    <small>${f.title || f.fileName}</small>
-                                </span>
-                                <button class="btn btn-sm ${f.isHidden ? 'btn-outline-success' : 'btn-outline-danger'}" 
-                                        onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName}', this)">
-                                    ${f.isHidden ? '👁️ إظهار' : '🙈 إخفاء'}
-                                </button>
+                        let filesHtml = files.map(f => {
+                            let isHidden = f.isHidden === true;
+                            let btnClass = isHidden ? 'btn-success' : 'btn-danger';
+                            let btnText = isHidden ? '👁️ إظهار للطالب' : '🙈 إخفاء عن الطالب';
+                            
+                            return `
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-bold">${f.title || f.fileName}</span>
+                                        ${isHidden ? '<span class="badge bg-secondary ms-2">مخفي</span>' : ''}
+                                    </div>
+                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName}', this)">
+                                        ${btnText}
+                                    </button>
+                                </li>
+                            `;
+                        }).join('');
+
+                        // شكل الكارت بتاع المقرر
+                        html += `
+                            <div class="card mb-3 shadow-sm border-0">
+                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong class="text-primary">${c.courseName}</strong> 
+                                        <span class="text-muted mx-2">|</span> 
+                                        <small>${c.academicYear}</small>
+                                        <span class="badge bg-secondary ms-2">${c.level}</span>
+                                    </div>
+                                    <small class="text-muted">آخر تحديث: ${c.date}</small>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    ${filesHtml}
+                                </ul>
                             </div>
-                        `).join('');
-
-                        return `
-                            <tr>
-                                <td><b>${c.courseName}</b></td>
-                                <td>${c.academicYear}</td>
-                                <td><span class="badge bg-secondary">${c.level}</span></td>
-                                <td style="min-width: 200px;">${filesListHtml}</td>
-                                <td><small>${c.date}</small></td>
-                            </tr>
                         `;
-                    }).join('');
+                    });
+                    
+                    container.innerHTML = html;
                 } else {
-                    filesBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا يوجد ملفات مرفوعة.</td></tr>';
+                    container.innerHTML = '<div class="alert alert-warning text-center">لا يوجد ملفات مرفوعة.</div>';
                 }
             });
 
-            // كود الكويزات زي ما هو
+            // كود تحميل الكويزات (سيبيه زي ما هو في آخر الدالة)
             const quizzesBody = document.getElementById('myQuizzesBody');
-            quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
-            apiCall('fetchQuizzesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
-                if (res.success && res.quizzes.length > 0) {
-                    quizzesBody.innerHTML = res.quizzes.map(q => `
-                        <tr>
-                            <td><b>${q.quizTitle}</b></td>
-                            <td><span class="badge bg-secondary">${q.courseName}</span></td>
-                            <td><span class="badge bg-success">${q.questionsCount} أسئلة</span></td>
-                            <td><small>${q.date}</small></td>
-                        </tr>
-                    `).join('');
-                } else {
-                    quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا يوجد كويزات مرفوعة.</td></tr>';
-                }
-            });
+            if (quizzesBody) {
+                quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
+                apiCall('fetchQuizzesForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
+                    if (res.success && res.quizzes.length > 0) {
+                        quizzesBody.innerHTML = res.quizzes.map(q => `
+                            <tr>
+                                <td><b>${q.quizTitle}</b></td>
+                                <td><span class="badge bg-secondary">${q.courseName}</span></td>
+                                <td><span class="badge bg-success">${q.questionsCount} أسئلة</span></td>
+                                <td><small>${q.date}</small></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">لا يوجد كويزات مرفوعة.</td></tr>';
+                    }
+                });
+            }
         }
-
         // دالة جديدة للإخفاء/الإظهار
         function toggleFileVisibility(courseName, academicYear, fileName, btnElement) {
             btnElement.disabled = true;
