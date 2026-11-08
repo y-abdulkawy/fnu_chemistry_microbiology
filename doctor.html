@@ -103,9 +103,23 @@
                                 <label class="form-label fw-bold">عنوان المحاضرة:</label>
                                 <input type="text" id="upTitle" class="form-control" required placeholder="مثال: المحاضرة الأولى">
                             </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold">الملف:</label>
-                                <input type="file" id="upFile" class="form-control" required>
+                            <div class="col-12 mt-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-label fw-bold m-0 text-primary">الملفات المرفقة:</label>
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold" onclick="addFileRow()">➕ إضافة ملف آخر</button>
+                                </div>
+                                
+                                <div id="filesContainer">
+                                    <!-- الصف الأول (افتراضي) -->
+                                    <div class="row g-2 mb-2 file-row">
+                                        <div class="col-md-5">
+                                            <input type="text" class="form-control file-title" placeholder="عنوان الملف (مثال: المحاضرة الأولى - جزء 1)" required>
+                                        </div>
+                                        <div class="col-md-7">
+                                            <input type="file" class="form-control file-input" required>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="progress mt-3 d-none" id="uploadProgressBox" style="height: 25px;">
@@ -379,87 +393,132 @@
             }
         }
 
-        function handleFileUpload(e) {
+
+
+
+
+
+        async function handleFileUpload(e) {
             e.preventDefault();
             const btn = document.getElementById('upBtn');
             const alertDiv = document.getElementById('uploadAlert');
             const progressBox = document.getElementById('uploadProgressBox');
             const progressBar = document.getElementById('uploadProgressBar');
             
-            const file = document.getElementById('upFile').files[0];
             const course = document.getElementById('upCourse').value; 
-            // حساب العام الدراسي أوتوماتيك في الخلفية
+            
+            // حساب العام الدراسي أوتوماتيك
             const today = new Date();
             let currentYear = today.getFullYear();
-            if (today.getMonth() < 8) { currentYear = currentYear - 1; } // لو إحنا قبل سبتمبر
+            if (today.getMonth() < 8) { currentYear = currentYear - 1; }
             const year = currentYear + '-' + (currentYear + 1);
-            
-            const title = document.getElementById('upTitle').value.trim();
-
-            // تجميع المستويات المختارة
+        
+            // تجميع المستويات
             const checkboxes = document.querySelectorAll('.up-lvl-chk:checked');
             let selectedLevels = [];
             checkboxes.forEach(cb => selectedLevels.push(cb.value));
-            const level = selectedLevels.join(', '); // لو اختار كذا مستوى بيجمعهم بفاصلة
-
+            const level = selectedLevels.join(', ');
+        
             if (!course || selectedLevels.length === 0) return alert("اختر المقرر والمستوى أولاً");
-            if (!file) return alert("اختر ملف أولاً");
-
-            btn.disabled = true; alertDiv.className = 'd-none'; progressBox.classList.remove('d-none'); progressBar.style.width = '0%'; progressBar.innerText = '0%';
-
-            apiCall('createResumableSession', {
-                fileName: file.name, mimeType: file.type, academicYear: year, level: level, courseName: course
-            }).then(res => {
-                if (!res.success) {
-                    btn.disabled = false; progressBox.classList.add('d-none');
-                    alertDiv.className = 'alert alert-danger mt-3 d-block'; alertDiv.innerText = res.message; return;
-                }
-
-                const xhr = new XMLHttpRequest();
-                // التعديل هنا: بنبعت الملف للـ Worker بتاعنا بدل جوجل مباشرة
-                const uploadProxyUrl = API_URL + '/upload?url=' + encodeURIComponent(res.uploadUrl);
-                xhr.open('PUT', uploadProxyUrl, true);
-                xhr.setRequestHeader('Content-Type', file.type);
-
-                xhr.upload.onprogress = function(event) {
-                    if (event.lengthComputable) {
-                        const percent = Math.round((event.loaded / event.total) * 100);
-                        progressBar.style.width = percent + '%';
-                        progressBar.innerText = percent + '%';
-                    }
-                };
-
-                xhr.onload = function() {
-                    if (xhr.status === 200 || xhr.status === 201) {
-                        const fileData = JSON.parse(xhr.responseText);
-                        const fileUrl = 'https://drive.google.com/file/d/' + fileData.id + '/view?usp=sharing';
-                        
-                        apiCall('saveDirectUploadMetadata', {
-                            payload: {
-                                courseName: course, academicYear: year, level: level, lectureTitle: title, fileName: file.name, fileUrl: fileUrl, doctor: currentDoctor
+        
+            // تجميع الملفات
+            const fileRows = document.querySelectorAll('.file-row');
+            const filesToUpload = [];
+            for (let row of fileRows) {
+                const title = row.querySelector('.file-title').value.trim();
+                const file = row.querySelector('.file-input').files[0];
+                if (!title || !file) return alert("تأكد من كتابة عنوان واختيار ملف لكل صف");
+                filesToUpload.push({ title: title, file: file });
+            }
+        
+            btn.disabled = true; 
+            alertDiv.className = 'd-none'; 
+            progressBox.classList.remove('d-none'); 
+            progressBar.style.width = '0%'; 
+            progressBar.innerText = 'جاري الرفع...';
+        
+            const uploadedFilesData = [];
+            let completed = 0;
+        
+            try {
+                // بنلف على كل ملف ونرفعه
+                for (let item of filesToUpload) {
+                    // 1. إنشاء جلسة الرفع
+                    const sessionRes = await apiCall('createResumableSession', {
+                        fileName: item.file.name, mimeType: item.file.type, academicYear: year, level: level, courseName: course
+                    });
+        
+                    if (!sessionRes.success) throw new Error(sessionRes.message);
+        
+                    // 2. رفع الملف لـ Google Drive (عن طريق Cloudflare)
+                    const fileUrl = await new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        const uploadProxyUrl = API_URL + '/upload?url=' + encodeURIComponent(sessionRes.uploadUrl);
+                        xhr.open('PUT', uploadProxyUrl, true);
+                        xhr.setRequestHeader('Content-Type', item.file.type);
+        
+                        xhr.upload.onprogress = function(event) {
+                            if (event.lengthComputable) {
+                                const percent = Math.round((event.loaded / event.total) * 100);
+                                progressBar.style.width = percent + '%';
+                                progressBar.innerText = `ملف ${completed + 1} من ${filesToUpload.length} (${percent}%)`;
                             }
-                        }).then(saveRes => {
-                            btn.disabled = false; progressBox.classList.add('d-none');
-                            if (saveRes.success) {
-                                alertDiv.className = 'alert alert-success mt-3 d-block'; alertDiv.innerText = '✅ تم رفع المحاضرة بنجاح!';
-                                document.getElementById('uploadForm').reset();
-                                document.getElementById('upLevelBox').innerHTML = '<span class="text-muted small">اختر المقرر أولاً...</span>';
+                        };
+        
+                        xhr.onload = function() {
+                            if (xhr.status === 200 || xhr.status === 201) {
+                                const fileData = JSON.parse(xhr.responseText);
+                                resolve('https://drive.google.com/file/d/' + fileData.id + '/view?usp=sharing');
                             } else {
-                                alertDiv.className = 'alert alert-danger mt-3 d-block'; alertDiv.innerText = saveRes.message;
+                                reject(new Error('فشل رفع الملف على Drive'));
                             }
-                        });
-                    } else {
-                        btn.disabled = false; progressBox.classList.add('d-none');
-                        alertDiv.className = 'alert alert-danger mt-3 d-block'; alertDiv.innerText = 'فشل رفع الملف على Drive.';
+                        };
+                        xhr.onerror = function() { reject(new Error('حدث خطأ في الاتصال أثناء الرفع')); };
+                        xhr.send(item.file);
+                    });
+        
+                    uploadedFilesData.push({ title: item.title, url: fileUrl });
+                    completed++;
+                }
+        
+                // 3. حفظ كل الملفات في الشيت مرة واحدة
+                const saveRes = await apiCall('saveDirectUploadMetadata', {
+                    payload: {
+                        courseName: course, 
+                        academicYear: year, 
+                        level: level, 
+                        files: uploadedFilesData, // بنبعت المصفوفة
+                        doctor: currentDoctor
                     }
-                };
-                xhr.onerror = function() {
-                    btn.disabled = false; progressBox.classList.add('d-none');
-                    alertDiv.className = 'alert alert-danger mt-3 d-block'; alertDiv.innerText = 'حدث خطأ في الاتصال أثناء الرفع.';
-                };
-                xhr.send(file);
-            });
+                });
+        
+                btn.disabled = false; progressBox.classList.add('d-none');
+                
+                if (saveRes.success) {
+                    alertDiv.className = 'alert alert-success mt-3 d-block'; 
+                    alertDiv.innerText = '✅ تم رفع جميع الملفات بنجاح!';
+                    document.getElementById('uploadForm').reset();
+                    document.getElementById('upLevelBox').innerHTML = '<span class="text-muted small">اختر المقرر أولاً...</span>';
+                    
+                    // نرجع الصفوف لصف واحد بس بعد الرفع
+                    const container = document.getElementById('filesContainer');
+                    container.innerHTML = `
+                        <div class="row g-2 mb-2 file-row">
+                            <div class="col-md-5"><input type="text" class="form-control file-title" placeholder="عنوان الملف (مثال: المحاضرة الأولى - جزء 1)" required></div>
+                            <div class="col-md-7"><input type="file" class="form-control file-input" required></div>
+                        </div>
+                    `;
+                } else {
+                    alertDiv.className = 'alert alert-danger mt-3 d-block'; 
+                    alertDiv.innerText = saveRes.message;
+                }
+            } catch (err) {
+                btn.disabled = false; progressBox.classList.add('d-none');
+                alertDiv.className = 'alert alert-danger mt-3 d-block'; 
+                alertDiv.innerText = err.message;
+            }
         }
+    
 
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
@@ -726,6 +785,20 @@
                 }
             }
         });
-    </script>
+        function addFileRow() {
+            const container = document.getElementById('filesContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'row g-2 mb-2 file-row';
+            newRow.innerHTML = `
+                <div class="col-md-5">
+                    <input type="text" class="form-control file-title" placeholder="عنوان الملف" required>
+                </div>
+                <div class="col-md-7">
+                    <input type="file" class="form-control file-input" required>
+                </div>
+            `;
+            container.appendChild(newRow);
+        }
+ </script>
 </body>
 </html>
