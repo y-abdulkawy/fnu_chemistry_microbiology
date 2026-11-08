@@ -411,7 +411,9 @@
                 }
 
                 const xhr = new XMLHttpRequest();
-                xhr.open('PUT', res.uploadUrl, true);
+                // التعديل هنا: بنبعت الملف للـ Worker بتاعنا بدل جوجل مباشرة
+                const uploadProxyUrl = API_URL + '/upload?url=' + encodeURIComponent(res.uploadUrl);
+                xhr.open('PUT', uploadProxyUrl, true);
                 xhr.setRequestHeader('Content-Type', file.type);
 
                 xhr.upload.onprogress = function(event) {
