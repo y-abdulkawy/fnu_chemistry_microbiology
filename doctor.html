@@ -100,7 +100,9 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">العام الدراسي:</label>
-                                <input type="text" id="upYear" class="form-control" required placeholder="2024-2025">
+                                <select id="upYear" class="form-select" required>
+                                    <option value="">اختر العام الدراسي...</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">عنوان المحاضرة:</label>
@@ -690,6 +692,39 @@
                 `).join('');
             });
         }
+        // دالة ملء قائمة الأعوام الدراسية واختيار العام الحالي تلقائياً
+        function populateUpYears() {
+            const select = document.getElementById('upYear');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">اختر العام الدراسي...</option>';
+            
+            const today = new Date();
+            let currentYear = today.getFullYear();
+            
+            if (today.getMonth() < 8) { 
+                currentYear = currentYear - 1;
+            }
+            const currentAcademicYear = currentYear + '-' + (currentYear + 1);
+        
+            for (let y = 2024; y <= 2036; y++) {
+                const label = y + '-' + (y + 1);
+                const opt = document.createElement('option');
+                opt.value = label;
+                opt.textContent = label;
+                
+                if (label === currentAcademicYear) {
+                    opt.selected = true; // هتختار العام الحالي أوتوماتيك
+                }
+                
+                select.appendChild(opt);
+            }
+        }
+        
+        // تشغيل الدالة أول ما الصفحة تحمل
+        document.addEventListener('DOMContentLoaded', () => {
+            populateUpYears();
+        });
     </script>
 </body>
 </html>
