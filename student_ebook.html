@@ -387,7 +387,9 @@
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
         let currentUser = null;
         let programCourses = [];
+        let currentQuizIndex = -1;
         let quizState = {}; 
+        window.LOADED_QUIZZES = [];
 
         window.onload = function() { loadProgramCoursesFromServer(); };
 
@@ -741,9 +743,6 @@
         }
 
         // ---------------- الكويزات ----------------
-        window.LOADED_QUIZZES = [];
-        let currentQuizIndex = -1;
-
         function loadStudentQuizzes() {
             const tabsContainer = document.getElementById('quizTabsContainer');
             const contentArea = document.getElementById('quizContentArea');
