@@ -105,17 +105,22 @@
                                     <button type="button" class="btn btn-sm btn-outline-success fw-bold" onclick="addFileRow()">➕ إضافة ملف آخر</button>
                                 </div>
                                 
+
                                 <div id="filesContainer">
-                                    <!-- الصف الأول (افتراضي) -->
-                                    <div class="row g-2 mb-2 file-row">
-                                        <div class="col-md-5">
+                                    <div class="row g-2 mb-2 file-row align-items-center">
+                                        <div class="col-md-4">
                                             <input type="text" class="form-control file-title" placeholder="عنوان الملف (مثال: المحاضرة الأولى - جزء 1)" required>
                                         </div>
-                                        <div class="col-md-7">
+                                        <div class="col-md-6">
                                             <input type="file" class="form-control file-input" required>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-danger w-100" onclick="removeFileRow(this)">❌ حذف</button>
                                         </div>
                                     </div>
                                 </div>
+
+                                
                             </div>
                         </div>
                         <div class="progress mt-3 d-none" id="uploadProgressBox" style="height: 25px;">
@@ -528,9 +533,16 @@
                     
                     const container = document.getElementById('filesContainer');
                     container.innerHTML = `
-                        <div class="row g-2 mb-2 file-row">
-                            <div class="col-md-5"><input type="text" class="form-control file-title" placeholder="عنوان الملف" required></div>
-                            <div class="col-md-7"><input type="file" class="form-control file-input" required></div>
+                        <div class="row g-2 mb-2 file-row align-items-center">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control file-title" placeholder="عنوان الملف" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="file" class="form-control file-input" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger w-100" onclick="removeFileRow(this)">❌ حذف</button>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -549,17 +561,32 @@
         function addFileRow() {
             const container = document.getElementById('filesContainer');
             const newRow = document.createElement('div');
-            newRow.className = 'row g-2 mb-2 file-row';
+            newRow.className = 'row g-2 mb-2 file-row align-items-center';
             newRow.innerHTML = `
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input type="text" class="form-control file-title" placeholder="عنوان الملف" required>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-6">
                     <input type="file" class="form-control file-input" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger w-100" onclick="removeFileRow(this)">❌ حذف</button>
                 </div>
             `;
             container.appendChild(newRow);
         }
+
+        // دالة جديدة لحذف الصف
+        function removeFileRow(btn) {
+            const rows = document.querySelectorAll('.file-row');
+            if (rows.length > 1) {
+                btn.closest('.file-row').remove();
+            } else {
+                alert("يجب أن يبقى ملف واحد على الأقل.");
+            }
+        }
+
+        
 
         function addQuestionForm() {
             const container = document.getElementById('questionsContainer');
