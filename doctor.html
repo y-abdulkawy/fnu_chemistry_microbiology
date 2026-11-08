@@ -73,7 +73,7 @@
                 <button class="nav-link" id="quiz-tab" data-bs-toggle="tab" data-bs-target="#quiz-pane" type="button" role="tab">📝 رفع كويز</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="myuploads-tab" data-bs-toggle="tab" data-bs-target="#myuploads-pane" type="button" role="tab" onclick="loadMyUploads()">📚 متابعة المرفوعات</button>
+                <button class="nav-link" id="myuploads-tab" data-bs-toggle="tab" data-bs-target="#myuploads-pane" type="button" role="tab" onclick="Uploads()">📚 متابعة المرفوعات</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-pane" type="button" role="tab" onclick="loadDoctorResults()">📊 نتائج الكويزات</button>
@@ -778,7 +778,7 @@
                                         <span class="fw-bold">${displayName}</span>
                                         ${isHidden ? '<span class="badge bg-secondary ms-2">مخفي</span>' : ''}
                                     </div>
-                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', ${index}, this)">
+                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.url}', this)">
                                         ${btnText}
                                     </button>
                                 </li>
