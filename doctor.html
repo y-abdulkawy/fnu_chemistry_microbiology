@@ -773,10 +773,14 @@
 
                         if (files.length === 0) return; // لو مفيش ملفات، مش هنعرض الكارت
                         
-                        let filesHtml = files.map((f, index) => {
+
+
+
+                                                let filesHtml = files.map((f, index) => {
                             let isHidden = f.isHidden === true;
                             let btnClass = isHidden ? 'btn-success' : 'btn-danger';
-                            let btnText = isHidden ? '👁️ إظهار للطالب' : '🙈 إخفاء عن الطالب';
+                            // النص بقى "إخفاء الملف" زي ما طلبت
+                            let btnText = isHidden ? '👁️ إظهار' : '🙈 إخفاء الملف'; 
                             
                             let displayName = f.title;
                             if (!displayName || displayName === "undefined") displayName = f.fileName;
@@ -792,11 +796,18 @@
                                     </div>
                                     <div>
                                         ${linkBtn}
-                                    <button class="btn btn-sm ${btnClass} fw-bold" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName || ''}', '${f.title || ''}', this)">                                        </button>
+                                        <button class="btn btn-sm ${btnClass} fw-bold ms-2" onclick="toggleFileVisibility('${c.courseName}', '${c.academicYear}', '${f.fileName || ''}', '${f.title || ''}', this)">
+                                            ${btnText}
+                                        </button>
                                     </div>
                                 </li>
                             `;
                         }).join('');
+
+
+
+
+                        
 
                         html += `
                             <div class="card mb-3 shadow-sm border-0">
