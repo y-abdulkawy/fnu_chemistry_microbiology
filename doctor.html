@@ -851,9 +851,11 @@
 
         
 
+
         function toggleFileVisibility(courseName, academicYear, fileName, fileTitle, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
+            
             apiCall('toggleFileVisibility', {
                 nationalId: currentDoctor.nationalId,
                 courseName: courseName,
@@ -864,7 +866,7 @@
                 if (res.success) {
                     loadMyUploads(); 
                 } else {
-                    alert("خطأ: " + res.message);
+                    alert(res.message); // هيظهرلك الرسالة اللي جاية من السيرفر
                     btnElement.disabled = false;
                     btnElement.innerText = 'إعادة محاولة';
                 }
@@ -872,6 +874,19 @@
         }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+        
 
         
 
