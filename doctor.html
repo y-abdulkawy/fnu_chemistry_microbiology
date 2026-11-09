@@ -244,34 +244,42 @@
             </div>
 
             <!-- 4. تاب نتائج الكويزات -->
+            <!-- 4. تاب نتائج الكويزات -->
             <div class="tab-pane fade" id="results-pane" role="tabpanel">
-                <div class="table-container">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-success mb-0">📊 نتائج الطلاب في الكويزات</h5>
-                        <div>
-                            <button class="btn btn-sm btn-outline-success fw-bold me-2" onclick="exportResultsToExcel()">📥 تحميل Excel</button>
-                            <button class="btn btn-sm btn-outline-danger fw-bold" onclick="exportResultsToPDF()">📄 تحميل PDF</button>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-success mb-0">📊 نتائج الكويزات</h5>
+                </div>
+                <!-- كروت الكويزات هتظهر هنا -->
+                <div id="doctorQuizzesResultsList" class="row g-3"></div>
+            </div>
+
+            <!-- Modal لعرض تفاصيل الكويز (مخفي في البداية) -->
+            <div class="modal fade" id="quizDetailsModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title fw-bold" id="modalQuizTitle">تفاصيل نتائج الكويز</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="d-flex gap-2 mb-3">
+                                <button class="btn btn-sm btn-outline-success fw-bold" onclick="exportModalTableToExcel()">📥 تحميل Excel</button>
+                                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="exportModalTableToPDF()">📄 تحميل PDF</button>
+                            </div>
+                            <div class="table-responsive" id="modalTableContainer">
+                                <table class="table table-bordered table-striped align-middle text-center" id="detailedResultsTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>الطالب</th><th>الرقم القومي</th><th>الدرجة</th><th>النسبة</th><th>تفاصيل الإجابات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modalResultsBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                    <div class="table-responsive" id="resultsTableContainer">
-                        <table class="table table-hover align-middle" id="resultsTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>التاريخ</th>
-                                    <th>اسم الطالب</th>
-                                    <th>المقرر</th>
-                                    <th>الكويز</th>
-                                    <th>الدرجة</th>
-                                    <th>النسبة</th>
-                                </tr>
-                            </thead>
-                            <tbody id="doctorResultsBody">
-                                <tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
-            </div>
+            </div>           
 
         </div>
     </div>
@@ -886,47 +894,121 @@
 
 
 
+        let allDoctorResults = []; // متغير لحفظ كل النتائج
 
-
-
-
-
-
-
-
-
-
-
-        
-
-        
-
-        
         function loadDoctorResults() {
-            const tbody = document.getElementById('doctorResultsBody');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">جاري التحميل...</td></tr>';
-            
+            const container = document.getElementById('doctorQuizzesResultsList');
+            container.innerHTML = '<div class="text-center text-muted p-4">جاري تحميل النتائج...</div>';
+
             apiCall('fetchQuizResultsForDoctor', { nationalId: currentDoctor.nationalId }).then(res => {
-                if (!res.success) {
-                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">${res.message}</td></tr>`;
+                if (!res.success || res.results.length === 0) {
+                    container.innerHTML = '<div class="alert alert-warning text-center w-100">لم يقم أي طالب بحل الكويزات حتى الآن.</div>';
                     return;
                 }
-                if (res.results.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">لم يقم أي طالب بحل الكويزات حتى الآن.</td></tr>';
-                    return;
+
+                allDoctorResults = res.results;
+                const quizzesMap = {};
+
+                // تجميع النتائج حسب اسم الكويز
+                allDoctorResults.forEach(r => {
+                    const key = r.quizTitle + "___" + r.courseName;
+                    if (!quizzesMap[key]) {
+                        quizzesMap[key] = { title: r.quizTitle, course: r.courseName, count: 0 };
+                    }
+                    quizzesMap[key].count++;
+                });
+
+                // بناء كروت الكويزات
+                let html = '';
+                for (const key in quizzesMap) {
+                    const q = quizzesMap[key];
+                    html += `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card shadow-sm border-0 h-100 border-right border-4 border-success">
+                                <div class="card-body text-center">
+                                    <h5 class="fw-bold text-success mb-2">📝 ${q.title}</h5>
+                                    <p class="text-muted mb-3">${q.course}</p>
+                                    <span class="badge bg-primary mb-3">${q.count} طالب شارك</span>
+                                    <button class="btn btn-outline-success w-100 fw-bold" onclick="showQuizDetails('${key}')">عرض تفاصيل النتائج</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 }
-                tbody.innerHTML = res.results.map(r => `
-                    <tr>
-                        <td><small>${r.date}</small></td>
-                        <td><b>${r.studentName}</b></td>
-                        <td><span class="badge bg-secondary">${r.courseName}</span></td>
-                        <td>${r.quizTitle}</td>
-                        <td><span class="badge bg-primary">${r.earnedGrades} / ${r.totalGrades}</span></td>
-                        <td><span class="badge ${parseFloat(r.percentage) >= 50 ? 'bg-success' : 'bg-danger'}">${r.percentage}</span></td>
-                    </tr>
-                `).join('');
+                container.innerHTML = html;
             });
         }
+
+        // دالة فتح الشاشة المنبثقة
+        function showQuizDetails(quizKey) {
+            const [title, course] = quizKey.split("___");
+            const quizResults = allDoctorResults.filter(r => r.quizTitle === title && r.courseName === course);
+            
+            document.getElementById('modalQuizTitle').innerText = `نتائج: ${title} - ${course}`;
+            const tbody = document.getElementById('modalResultsBody');
+            tbody.innerHTML = '';
+
+            quizResults.forEach(r => {
+                // تجميع الإجابات في نص مقروء (مثلاً: Q1: 2 | Q2: 4)
+                let answersHtml = '';
+                if (r.answers && Object.keys(r.answers).length > 0) {
+                    answersHtml = Object.keys(r.answers).map(qIdx => {
+                        return `<span class="badge bg-secondary m-1">س${parseInt(qIdx)+1}: ${r.answers[qIdx]}</span>`;
+                    }).join('');
+                } else {
+                    answersHtml = '<span class="text-muted">لا توجد تفاصيل</span>';
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${r.studentName}</b></td>
+                        <td>${r.nationalId}</td>
+                        <td><span class="badge bg-primary">${r.earnedGrades} / ${r.totalGrades}</span></td>
+                        <td><span class="badge ${parseFloat(r.percentage) >= 50 ? 'bg-success' : 'bg-danger'}">${r.percentage}</span></td>
+                        <td style="text-align: right;">${answersHtml}</td>
+                    </tr>
+                `;
+            });
+
+            new bootstrap.Modal(document.getElementById('quizDetailsModal')).show();
+        }
+
+        // دالة تحميل الإكسيل
+        function exportModalTableToExcel() {
+            const table = document.getElementById('detailedResultsTable');
+            if (!table) return;
+            const wb = XLSX.utils.table_to_book(table, {sheet: "النتائج"});
+            XLSX.writeFile(wb, 'تفاصيل_نتائج_الكويز.xlsx');
+        }
+
+        // دالة تحميل الـ PDF
+        function exportModalTableToPDF() {
+            const element = document.getElementById('modalTableContainer');
+            if (!element) return;
+            const opt = {
+                margin:       0.5,
+                filename:     'تفاصيل_نتائج_الكويز.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+
+
+
+
+
+
+
+
+
+        
+
+        
+
+        
 
         // دالة تحميل الإكسيل
         function exportResultsToExcel() {
