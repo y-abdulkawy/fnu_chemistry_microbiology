@@ -1050,7 +1050,9 @@
                 payload: { 
                     studentName: currentUser.user.fullName, nationalId: currentUser.user.nationalId, 
                     courseName: quiz.courseName, doctorName: quiz.doctorName, quizTitle: quiz.quizTitle, 
-                    earnedGrades: earnedGrades, totalGrades: totalGrades, percentage: percentage.toFixed(1) 
+                    earnedGrades: earnedGrades, totalGrades: totalGrades, percentage: percentage.toFixed(1),
+                    answers: state.answers // 👈 ضيف السطر ده عشان يبعت الإجابات
+
                 } 
             }).then(res => {
                 const mainArea = document.getElementById('quizMainArea');
