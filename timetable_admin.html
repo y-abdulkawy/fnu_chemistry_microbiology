@@ -40,12 +40,18 @@
     </div>
 
     <div class="row mb-4 bg-white p-3 rounded shadow-sm">
-        <div class="col-md-6">
+        <!-- خانة لمدير البرنامج (ثابتة) -->
+        <div class="col-md-6" id="singleProgramView" style="display: none;">
             <label class="fw-bold">البرنامج الدراسي:</label>
-            <select id="programSelect" class="form-select" onchange="loadSchedule()" disabled>
-                <!-- البرامج بتتحط هنا من الدالة -->
-            </select>
+            <input type="text" id="programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
         </div>
+
+        <!-- قائمة منسدلة للأدمن الرئيسي -->
+        <div class="col-md-6" id="allProgramsView" style="display: none;">
+            <label class="fw-bold">اختر البرنامج الدراسي:</label>
+            <select id="programSelect" class="form-select" onchange="loadSchedule()"></select>
+        </div>
+
         <div class="col-md-6">
             <label class="fw-bold">الفرقة:</label>
             <select id="levelSelect" class="form-select" onchange="loadSchedule()">
@@ -76,20 +82,10 @@
     const HALLS = ["GB-Eduo01","1B-Edu02","1B-Edu03","2B-EDU01","2B-EDU02","2B-EDU03","2B-EDU04","2B-EDU05","2B-EDU06","3B-EDU01","3B-LAB02","3B-LAB03","3B-LAB04","3B-LAB05","3B-LAB06","3B-LAB07","3B-LAB08","4B-EDU01","4B-EDU02","4B-EDU03","4B-EDU04","4B-EDU05","4B-EDU06","4B-EDU07","4B-EDU08","4B-EDU09"];
     const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
     const LECTURES = ["المحاضرة الأولى", "المحاضرة الثانية", "المحاضرة الثالثة", "المحاضرة الرابعة", "المحاضرة الخامسة"];
-    
-    // البرامج السبعة (تقدر تغير أسماؤها هنا)
-    const PROGRAMS = {
-        "P1": "برنامج 1",
-        "P2": "برنامج 2",
-        "P3": "برنامج 3",
-        "P4": "برنامج 4",
-        "P5": "برنامج 5",
-        "P6": "برنامج 6",
-        "P7": "برنامج 7"
-    };
 
     let allBookedSlots = [];
-    let currentAdminProgram = ""; // البرنامج اللي المدير بيديره
+    let currentAdminProgram = ""; 
+    let isSuperAdmin = false;
 
     async function apiCall(action, params) {
         try {
@@ -115,30 +111,39 @@
         const res = await apiCall('loginTimetableAdmin', { username: u, password: p });
 
         btn.disabled = false; btn.innerText = 'دخول';
+        
         if (res.success) {
-            currentAdminProgram = res.program;
             document.getElementById('loginScreen').classList.add('d-none');
             document.getElementById('timetableScreen').classList.remove('d-none');
-            document.getElementById('welcomeUser').innerText = "مرحباً، " + u + " (" + (PROGRAMS[res.program] || res.program) + ")";
-            
-            // تحميل الجدول
-            setupProgramsDropdown();
+            document.getElementById('welcomeUser').innerText = "مرحباً، " + u;
+
+            if (res.isSuperAdmin) {
+                // أدمن رئيسي: نظهر القائمة المنسدلة
+                isSuperAdmin = true;
+                document.getElementById('allProgramsView').style.display = 'block';
+                document.getElementById('singleProgramView').style.display = 'none';
+                setupProgramsDropdownForAdmin();
+            } else {
+                // مدير برنامج: نظهر الخانة الثابتة
+                isSuperAdmin = false;
+                currentAdminProgram = res.programCode;
+                document.getElementById('allProgramsView').style.display = 'none';
+                document.getElementById('singleProgramView').style.display = 'block';
+                document.getElementById('programDisplay').value = res.programName;
+                loadSchedule();
+            }
         } else {
             alertDiv.className = 'alert alert-danger mt-3 d-block';
             alertDiv.innerText = res.message;
         }
     }
 
-    // إعداد قائمة البرامج وتثبيت برنامج المدير
-    // إعداد قائمة البرامج وتثبيت برنامج المدير
-    async function setupProgramsDropdown() {
+    // دالة ملء القائمة المنسدلة للأدمن الرئيسي
+    async function setupProgramsDropdownForAdmin() {
         const sel = document.getElementById('programSelect');
-        sel.innerHTML = '<option value="">جاري التحميل...</option>';
+        sel.innerHTML = '<option value="">اختر البرنامج...</option>';
         
-        // بنجيب قائمة البرامج من السيرفر
         const res = await apiCall('getProgramsList');
-        sel.innerHTML = '';
-        
         if (res.success && res.programs) {
             res.programs.forEach(p => {
                 sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
@@ -146,17 +151,16 @@
         } else {
             sel.innerHTML = '<option value="">خطأ في تحميل البرامج</option>';
         }
-
-        // تثبيت البرنامج الخاص بالمدير
-        sel.value = currentAdminProgram;
-        sel.disabled = true; // قفل القائمة عشان ميعرفش يغير البرنامج
-        
-        loadSchedule();
     }
 
-    
     async function loadSchedule() {
-        const program = document.getElementById('programSelect').value;
+        let program = currentAdminProgram; 
+        
+        // لو إحنا في وضع الأدمن الرئيسي، بناخد البرنامج من القائمة
+        if (isSuperAdmin) {
+            program = document.getElementById('programSelect').value;
+        }
+
         const level = document.getElementById('levelSelect').value;
 
         if (!program || !level) return renderTable([], '', '');
@@ -198,10 +202,14 @@
     }
 
     async function saveSchedule() {
-        const program = document.getElementById('programSelect').value;
+        let program = currentAdminProgram;
+        if (isSuperAdmin) {
+            program = document.getElementById('programSelect').value;
+        }
+        
         const level = document.getElementById('levelSelect').value;
 
-        if (!program || !level) return alert("اختر الفرقة أولاً");
+        if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
 
         const schedule = [];
         DAYS.forEach(day => {
