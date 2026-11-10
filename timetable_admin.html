@@ -25,7 +25,7 @@
         }
         .cell-inputs input:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25); }
         
-        /* تنسيق الخلية المحجوزة (عشان تبان أوضح) */
+        /* تنسيق الخلية المحجوزة */
         .booked-cell { background-color: #f8d7da !important; border: 2px solid #dc3545 !important; }
         .booked-cell input { 
             background-color: #f8d7da; 
@@ -54,6 +54,8 @@
 
 <!-- شاشة الجدول -->
 <div id="timetableScreen" class="container-fluid mt-3 d-none">
+    
+    <!-- الهيدر -->
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="text-primary m-0">📅 إدارة الجدول الدراسي</h3>
         <div>
@@ -61,11 +63,12 @@
             <button class="btn btn-outline-danger btn-sm fw-bold" onclick="logoutAdmin()">خروج</button>
         </div>
     </div>
-     <div class="alert alert-info py-2 small mb-3">
+
+    <div class="alert alert-info py-2 small mb-3">
         💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى، ولا يمكن تعديلها. يمكنك الكتابة في الخلايا البيضاء فقط.
     </div>
 
-    
+    <!-- اختيار البرنامج والفرقة -->
     <div class="row mb-3 bg-white p-3 rounded shadow-sm">
         <div class="col-md-6" id="singleProgramView" style="display: none;">
             <label class="fw-bold">البرنامج الدراسي:</label>
@@ -85,11 +88,74 @@
         </div>
     </div>
 
-    <div class="timetable-wrapper shadow-sm">
-        <table class="timetable-main" id="mainTable"></table>
+    <!-- أزرار التنقل بين العرض والإضافة -->
+    <div class="btn-group w-100 mb-3 shadow-sm" role="group">
+        <button type="button" class="btn btn-primary fw-bold" id="btnViewMode" onclick="switchMode('view')">👁️ عرض الجدول الحالي</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" id="btnEditMode" onclick="switchMode('edit')">➕ إضافة وتعديل الجدول</button>
     </div>
 
-    <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول</button>
+    <!-- وضع العرض (الجدول) -->
+    <div id="viewModeContainer">
+        <div class="timetable-wrapper shadow-sm">
+            <table class="timetable-main" id="mainTable"></table>
+        </div>
+        <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول</button>
+    </div>
+
+    <!-- وضع الإضافة -->
+    <div id="editModeContainer" class="d-none">
+        <!-- إضافة مقرر ودكتور جديد -->
+        <div class="bg-white p-4 rounded shadow-sm mb-4">
+            <h5 class="fw-bold text-success mb-3">1️⃣ إضافة مقرر ودكتور جديد للبرنامج</h5>
+            <div class="row g-2">
+                <div class="col-md-5"><input type="text" id="newCourseName" class="form-control" placeholder="اسم المقرر"></div>
+                <div class="col-md-5"><input type="text" id="newDoctorName" class="form-control" placeholder="اسم الدكتور"></div>
+                <div class="col-md-2"><button class="btn btn-success w-100" onclick="saveNewSubject()">حفظ</button></div>
+            </div>
+        </div>
+
+        <!-- إضافة صف للجدول -->
+        <div class="bg-white p-4 rounded shadow-sm mb-4">
+            <h5 class="fw-bold text-primary mb-3">2️⃣ إضافة صف للجدول</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="fw-bold">المكان:</label>
+                    <select id="addHall" class="form-select"></select>
+                </div>
+                <div class="col-md-4">
+                    <label class="fw-bold">اليوم:</label>
+                    <select id="addDay" class="form-select">
+                        <option value="السبت">السبت</option>
+                        <option value="الأحد">الأحد</option>
+                        <option value="الاثنين">الاثنين</option>
+                        <option value="الثلاثاء">الثلاثاء</option>
+                        <option value="الأربعاء">الأربعاء</option>
+                        <option value="الخميس">الخميس</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="fw-bold">المحاضرة:</label>
+                    <select id="addLecture" class="form-select">
+                        <option value="المحاضرة الأولى">المحاضرة الأولى</option>
+                        <option value="المحاضرة الثانية">المحاضرة الثانية</option>
+                        <option value="المحاضرة الثالثة">المحاضرة الثالثة</option>
+                        <option value="المحاضرة الرابعة">المحاضرة الرابعة</option>
+                        <option value="المحاضرة الخامسة">المحاضرة الخامسة</option>
+                    </select>
+                </div>
+                <div class="col-md-12">
+                    <label class="fw-bold">المقرر (من الدكاترة):</label>
+                    <select id="addSubject" class="form-select">
+                        <option value="">اختر المقرر...</option>
+                    </select>
+                </div>
+                <div class="col-12 mt-3">
+                    <button class="btn btn-primary w-100 fw-bold" onclick="addRowToSchedule()">إضافة الصف للجدول</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -213,11 +279,97 @@
         table.innerHTML = html;
     }
 
+    function switchMode(mode) {
+        const btnView = document.getElementById('btnViewMode');
+        const btnEdit = document.getElementById('btnEditMode');
+        const viewContainer = document.getElementById('viewModeContainer');
+        const editContainer = document.getElementById('editModeContainer');
+
+        if (mode === 'view') {
+            btnView.classList.replace('btn-outline-primary', 'btn-primary');
+            btnEdit.classList.replace('btn-primary', 'btn-outline-primary');
+            viewContainer.classList.remove('d-none');
+            editContainer.classList.add('d-none');
+            loadSchedule();
+        } else {
+            btnEdit.classList.replace('btn-outline-primary', 'btn-primary');
+            btnView.classList.replace('btn-primary', 'btn-outline-primary');
+            viewContainer.classList.add('d-none');
+            editContainer.classList.remove('d-none');
+            populateAddForm();
+        }
+    }
+
+    async function populateAddForm() {
+        const hallSelect = document.getElementById('addHall');
+        hallSelect.innerHTML = '';
+        HALLS.forEach(h => hallSelect.innerHTML += `<option value="${h}">${h} (${HALL_CAPACITIES[h] || '-'} طالب)</option>`);
+
+        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        if (!program) return;
+
+        const res = await apiCall('getSubjects', { program: program });
+        const subSelect = document.getElementById('addSubject');
+        subSelect.innerHTML = '<option value="">اختر المقرر...</option>';
+        if (res.success && res.subjects) {
+            res.subjects.forEach(s => {
+                subSelect.innerHTML += `<option value="${s.courseName}" data-doctor="${s.doctorName}">${s.courseName} - د. ${s.doctorName}</option>`;
+            });
+        }
+    }
+
+    async function saveNewSubject() {
+        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        const course = document.getElementById('newCourseName').value.trim();
+        const doctor = document.getElementById('newDoctorName').value.trim();
+
+        if (!program) return alert("اختر البرنامج أولاً");
+        if (!course || !doctor) return alert("اكتب اسم المقرر والدكتور");
+
+        const res = await apiCall('addSubject', { payload: { program: program, courseName: course, doctorName: doctor } });
+        alert(res.message);
+        if (res.success) {
+            document.getElementById('newCourseName').value = '';
+            document.getElementById('newDoctorName').value = '';
+            populateAddForm();
+        }
+    }
+
+    async function addRowToSchedule() {
+        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        const level = document.getElementById('levelSelect').value;
+        const hall = document.getElementById('addHall').value;
+        const day = document.getElementById('addDay').value;
+        const lecture = document.getElementById('addLecture').value;
+        const subSelect = document.getElementById('addSubject');
+        const course = subSelect.value;
+        
+        if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
+        if (!course) return alert("اختر المقرر");
+        
+        const doctorName = subSelect.options[subSelect.selectedIndex].getAttribute('data-doctor') || "غير محدد";
+
+        // بنجهز الصف الجديد كـ مصفوفة فيها صف واحد
+        const schedule = [{ 
+            day: day, lecture: lecture, hall: hall,
+            courseName: course, doctorName: doctorName, studentLevel: level,
+            capacity: HALL_CAPACITIES[hall]
+        }];
+
+        const res = await apiCall('saveProgramSchedule', {
+            payload: { program: program, level: level, schedule: schedule }
+        });
+
+        alert(res.message);
+        if (res.success) {
+            switchMode('view'); 
+        }
+    }
+
     async function loadSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
 
-        // لو مفيش برنامج أو فرقة، نفتح كل الخلايا ونفضيها
         if (!program || !level) {
             document.querySelectorAll('.cell-inputs input').forEach(input => {
                 input.value = '';
@@ -237,7 +389,6 @@
     }
 
     function fillTableWithData(currentProgram, currentLevel) {
-        // نفتح كل الخلايا الأول
         document.querySelectorAll('.cell-inputs input').forEach(input => {
             input.value = '';
             input.disabled = false;
@@ -261,15 +412,11 @@
                         document.getElementById(`${cellId}_doctor`).value = booking.doctorName || "";
                         document.getElementById(`${cellId}_level`).value = booking.studentLevel || "";
                     } else {
-                        // لو محجوز من دكتور تاني
                         container.parentElement.classList.add('booked-cell');
-                        
-                        // نعرض اسم المقرر والدكتور اللي حاجزين
                         document.getElementById(`${cellId}_course`).value = booking.courseName || "محجوز";
                         document.getElementById(`${cellId}_doctor`).value = "د. " + (booking.doctorName || "غير محدد");
                         document.getElementById(`${cellId}_level`).value = booking.studentLevel || "";
                         
-                        // نقفل الخلايا عشان ميعرفش يعدلها
                         document.getElementById(`${cellId}_course`).disabled = true;
                         document.getElementById(`${cellId}_doctor`).disabled = true;
                         document.getElementById(`${cellId}_level`).disabled = true;
@@ -280,6 +427,7 @@
     }
 
     async function saveSchedule() {
+        // دالة الحفظ القديمة (لو عايز تعدل كل الجدول مرة واحدة)
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
 
