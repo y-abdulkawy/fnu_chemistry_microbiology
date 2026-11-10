@@ -5,18 +5,32 @@
     <title>إدارة الجدول الدراسي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <style>
-        .timetable-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 10px; }
-        .timetable-main { border-collapse: collapse; width: 100%; min-width: 1500px; text-align: center; font-size: 12px; }
-        .timetable-main th, .timetable-main td { border: 1px solid #ccc; padding: 5px; }
+        /* تنسيقات شكل الجدول الجديد */
+        .timetable-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 10px; border: 1px solid #dee2e6; }
+        .timetable-main { border-collapse: collapse; width: 100%; min-width: 1600px; text-align: center; font-size: 12px; }
+        .timetable-main th, .timetable-main td { border: 1px solid #adb5bd; padding: 4px; }
         .timetable-main th { background-color: #0d6efd; color: white; font-size: 14px; }
         .day-header { background-color: #0a58ca !important; color: white; font-weight: bold; }
-        .place-cell { background-color: #f8f9fa; font-weight: bold; width: 80px; }
+        .place-cell { background-color: #f8f9fa; font-weight: bold; width: 90px; color: #0d6efd; }
         .capacity-cell { background-color: #e9ecef; font-weight: bold; width: 50px; }
-        .cell-inputs input { width: 100%; border: 1px solid #ced4da; border-radius: 4px; font-size: 11px; padding: 2px; margin-bottom: 2px; text-align: center; }
+        
+        /* تنسيق صناديق الإدخال */
+        .cell-inputs input { 
+            width: 100%; 
+            border: 1px solid #ced4da; 
+            border-radius: 4px; 
+            font-size: 11px; 
+            padding: 4px; 
+            margin-bottom: 3px; 
+            text-align: center; 
+        }
         .cell-inputs input:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25); }
-        .login-card { max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; }
+        
+        /* تنسيق الخلية المحجوزة */
         .booked-cell { background-color: #f8d7da !important; }
-        .booked-cell input { background-color: #f8d7da; color: #842029; font-weight: bold; }
+        .booked-cell input { background-color: #f8d7da; color: #842029; font-weight: bold; border-color: #f5c2c7; }
+        
+        .login-card { max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; }
     </style>
 </head>
 <body class="bg-light">
@@ -43,14 +57,18 @@
     </div>
 
     <div class="row mb-3 bg-white p-3 rounded shadow-sm">
+        <!-- خانة لمدير البرنامج (ثابتة) -->
         <div class="col-md-6" id="singleProgramView" style="display: none;">
             <label class="fw-bold">البرنامج الدراسي:</label>
             <input type="text" id="programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
         </div>
+
+        <!-- قائمة منسدلة للأدمن الرئيسي -->
         <div class="col-md-6" id="allProgramsView" style="display: none;">
-            <label class="fw-bold">اختر البرنامج:</label>
+            <label class="fw-bold">اختر البرنامج الدراسي:</label>
             <select id="programSelect" class="form-select" onchange="loadSchedule()"></select>
         </div>
+
         <div class="col-md-6">
             <label class="fw-bold">الفرقة:</label>
             <select id="levelSelect" class="form-select" onchange="loadSchedule()">
@@ -110,10 +128,10 @@
         btn.disabled = false; btn.innerText = 'دخول';
         
         if (res.success) {
-            // حفظ الجلسة في المتصفح
             localStorage.setItem('fnu_tt_user', u);
             localStorage.setItem('fnu_tt_isSuper', res.isSuperAdmin);
             localStorage.setItem('fnu_tt_program', res.isSuperAdmin ? "" : res.programCode);
+            localStorage.setItem('fnu_tt_programName', res.isSuperAdmin ? "" : res.programName); // لحفظ اسم البرنامج
 
             document.getElementById('loginScreen').classList.add('d-none');
             document.getElementById('timetableScreen').classList.remove('d-none');
@@ -292,6 +310,7 @@
         localStorage.removeItem('fnu_tt_user');
         localStorage.removeItem('fnu_tt_isSuper');
         localStorage.removeItem('fnu_tt_program');
+        localStorage.removeItem('fnu_tt_programName');
         location.reload();
     }
 
@@ -300,6 +319,7 @@
         const savedUser = localStorage.getItem('fnu_tt_user');
         const savedIsSuper = localStorage.getItem('fnu_tt_isSuper');
         const savedProgram = localStorage.getItem('fnu_tt_program');
+        const savedProgramName = localStorage.getItem('fnu_tt_programName');
 
         if (savedUser) {
             document.getElementById('loginScreen').classList.add('d-none');
@@ -316,7 +336,7 @@
                 currentAdminProgram = savedProgram;
                 document.getElementById('allProgramsView').style.display = 'none';
                 document.getElementById('singleProgramView').style.display = 'block';
-                document.getElementById('programDisplay').value = savedProgram; 
+                document.getElementById('programDisplay').value = savedProgramName; 
                 buildTable();
                 loadSchedule();
             }
