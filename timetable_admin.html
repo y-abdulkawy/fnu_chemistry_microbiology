@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة الجدول الدراسي</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <style>
+        .timetable-table th, .timetable-table td { text-align: center; vertical-align: middle; }
+        .timetable-table select { width: 100%; padding: 5px; border-radius: 5px; }
+        .booked { background-color: #f8d7da !important; color: #842029; font-weight: bold; cursor: not-allowed; }
+        .available { background-color: #d1e7dd !important; color: #0f5132; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h3 class="text-center text-primary mb-4">📅 إدارة الجدول الدراسي</h3>
+
+    <!-- اختيار البرنامج والفرقة -->
+    <div class="row mb-4 bg-white p-3 rounded shadow-sm">
+        <div class="col-md-6">
+            <label class="fw-bold">البرنامج الدراسي:</label>
+            <select id="programSelect" class="form-select" onchange="loadSchedule()">
+                <option value="">اختر البرنامج...</option>
+                <option value="P1">برنامج 1</option>
+                <option value="P2">برنامج 2</option>
+                <option value="P3">برنامج 3</option>
+                <option value="P4">برنامج 4</option>
+                <option value="P5">برنامج 5</option>
+                <option value="P6">برنامج 6</option>
+                <option value="P7">برنامج 7</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="fw-bold">الفرقة:</label>
+            <select id="levelSelect" class="form-select" onchange="loadSchedule()">
+                <option value="">اختر الفرقة...</option>
+                <option value="1">الفرقة الأولى</option>
+                <option value="2">الفرقة الثانية</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- الجدول -->
+    <div class="table-responsive bg-white p-3 rounded shadow-sm">
+        <table class="table table-bordered timetable-table">
+            <thead class="table-dark">
+                <tr>
+                    <th>المحاضرة / اليوم</th>
+                    <th>السبت</th>
+                    <th>الأحد</th>
+                    <th>الاثنين</th>
+                    <th>الثلاثاء</th>
+                    <th>الأربعاء</th>
+                    <th>الخميس</th>
+                </tr>
+            </thead>
+            <tbody id="timetableBody">
+                <!-- الصفوف هتتملا بالجافاسكريبت -->
+            </tbody>
+        </table>
+    </div>
+
+    <button class="btn btn-success w-100 mt-3 fw-bold" onclick="saveSchedule()">💾 حفظ الجدول</button>
+</div>
+
+<script>
+    // قائمة القاعات الـ 26
+    const HALLS = [
+        { id: "GB-Eduo01", cap: 90 }, { id: "1B-Edu02", cap: 0 }, { id: "1B-Edu03", cap: 0 },
+        { id: "2B-EDU01", cap: 150 }, { id: "2B-EDU02", cap: 70 }, { id: "2B-EDU03", cap: 70 },
+        { id: "2B-EDU04", cap: 70 }, { id: "2B-EDU05", cap: 70 }, { id: "2B-EDU06", cap: 30 },
+        { id: "3B-EDU01", cap: 100 }, { id: "3B-LAB02", cap: 70 }, { id: "3B-LAB03", cap: 70 },
+        { id: "3B-LAB04", cap: 70 }, { id: "3B-LAB05", cap: 70 }, { id: "3B-LAB06", cap: 70 },
+        { id: "3B-LAB07", cap: 70 }, { id: "3B-LAB08", cap: 30 }, { id: "4B-EDU01", cap: 100 },
+        { id: "4B-EDU02", cap: 100 }, { id: "4B-EDU03", cap: 70 }, { id: "4B-EDU04", cap: 70 },
+        { id: "4B-EDU05", cap: 70 }, { id: "4B-EDU06", cap: 70 }, { id: "4B-EDU07", cap: 70 },
+        { id: "4B-EDU08", cap: 70 }, { id: "4B-EDU09", cap: 30 }
+    ];
+
+    const DAYS = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+    const LECTURES = ["المحاضرة الأولى", "المحاضرة الثانية", "المحاضرة الثالثة", "المحاضرة الرابعة", "المحاضرة الخامسة"];
+
+    // دالة لرسم الجدول الفاضي
+    function renderEmptyTable() {
+        const tbody = document.getElementById('timetableBody');
+        tbody.innerHTML = '';
+        
+        LECTURES.forEach(lecture => {
+            let row = `<tr><td class="fw-bold bg-light">${lecture}</td>`;
+            DAYS.forEach(day => {
+                let options = `<option value="">-- اختر قاعة --</option>`;
+                HALLS.forEach(hall => {
+                    options += `<option value="${hall.id}">${hall.id} (${hall.cap} طالب)</option>`;
+                });
+                row += `<td><select class="form-select form-select-sm" id="cell_${lecture}_${day}">${options}</select></td>`;
+            });
+            row += `</tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // دالة حفظ الجدول
+    function saveSchedule() {
+        alert("سيتم ربطها بالسيرفر لحفظ الجدول ومنع التعارض.");
+    }
+
+    // تشغيل الرسم أول ما الصفحة تفتح
+    window.onload = renderEmptyTable;
+</script>
+</body>
+</html>
