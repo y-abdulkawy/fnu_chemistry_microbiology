@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>إدارة الجدول الدراسي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         .timetable-wrapper { overflow-x: auto; background: white; padding: 10px; border-radius: 10px; width: 100%; border: 1px solid #dee2e6; }
         .timetable-main { border-collapse: collapse; width: 100%; min-width: 1500px; text-align: center; font-size: 11px; }
@@ -153,6 +154,26 @@
                     <button class="btn btn-primary w-100 fw-bold" onclick="addRowToSchedule()">إضافة الصف للجدول</button>
                 </div>
             </div>
+        </div>
+
+        <!-- رفع جدول من ملف Excel -->
+        <div class="bg-white p-4 rounded shadow-sm mb-4">
+            <h5 class="fw-bold text-warning mb-3">3️⃣ رفع الجدول من ملف Excel</h5>
+            <div class="alert alert-warning py-2 small">
+                ⚠️ <strong>تنسيق الملف المطلوب:</strong> أعمدة بالترتيب:
+                <code>Hall</code> | <code>Day</code> | <code>Lecture</code> | <code>Course</code> | <code>Doctor</code> | <code>Level</code>
+                <br>الصف الأول لازم يكون هيدر بأسماء الأعمدة دي.
+                <a href="#" onclick="downloadExcelTemplate(); return false;" class="fw-bold">📄 تحميل نموذج جاهز</a>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-9">
+                    <input type="file" id="excelFileInput" class="form-control" accept=".xlsx,.xls,.csv">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-warning w-100 fw-bold" onclick="uploadExcelSchedule()">📤 رفع وحفظ</button>
+                </div>
+            </div>
+            <div id="excelUploadResult" class="mt-3"></div>
         </div>
     </div>
 
@@ -465,6 +486,139 @@
         btn.disabled = false; btn.innerText = '💾 حفظ الجدول';
         alert(res.message);
         if (res.success) loadSchedule();
+    }
+
+    // ═══════════════════════════════════════════
+    // 📤 رفع الجدول من ملف Excel
+    // ═══════════════════════════════════════════
+
+    function downloadExcelTemplate() {
+        const headers = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
+        const sample = [
+            ["2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد", "1"],
+            ["3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي", "1"]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Timetable");
+        XLSX.writeFile(wb, "نموذج_الجدول_الدراسي.xlsx");
+    }
+
+    async function uploadExcelSchedule() {
+        const fileInput = document.getElementById('excelFileInput');
+        const resultDiv = document.getElementById('excelUploadResult');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر ملف أولاً</div>';
+            return;
+        }
+
+        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        const level = document.getElementById('levelSelect').value;
+
+        if (!program) {
+            resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر البرنامج أولاً</div>';
+            return;
+        }
+        if (!level) {
+            resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر الفرقة أولاً</div>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<div class="alert alert-info py-2">⏳ جاري قراءة الملف...</div>';
+
+        try {
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+            if (rows.length === 0) {
+                resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ الملف فاضي!</div>';
+                return;
+            }
+
+            // تحقق من الأعمدة المطلوبة
+            const firstRow = rows[0];
+            const requiredCols = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
+            const missing = requiredCols.filter(c => !(c in firstRow));
+            if (missing.length > 0) {
+                resultDiv.innerHTML = `<div class="alert alert-danger py-2">⚠️ أعمدة ناقصة: ${missing.join(', ')}<br>تأكد من أسماء الأعمدة في الصف الأول.</div>`;
+                return;
+            }
+
+            // تجهيز الـ schedule
+            const schedule = [];
+            const errors = [];
+
+            rows.forEach((row, idx) => {
+                const hall = String(row.Hall || "").trim();
+                const day = String(row.Day || "").trim();
+                const lecture = String(row.Lecture || "").trim();
+                const course = String(row.Course || "").trim();
+                const doctor = String(row.Doctor || "").trim();
+                const rowLevel = String(row.Level || "").trim();
+
+                const rowNum = idx + 2; // +2 عشان الهيدر وبنبدأ من 1
+
+                if (!hall && !day && !lecture && !course) return; // صف فاضي
+
+                if (!hall || !day || !lecture) {
+                    errors.push(`صف ${rowNum}: ناقص Hall/Day/Lecture`);
+                    return;
+                }
+                if (!HALLS.includes(hall)) {
+                    errors.push(`صف ${rowNum}: القاعة "${hall}" غير معروفة`);
+                    return;
+                }
+                if (!DAYS.includes(day)) {
+                    errors.push(`صف ${rowNum}: اليوم "${day}" غير معروف`);
+                    return;
+                }
+                if (!LECTURES.includes(lecture)) {
+                    errors.push(`صف ${rowNum}: المحاضرة "${lecture}" غير معروفة`);
+                    return;
+                }
+
+                schedule.push({
+                    day: day,
+                    lecture: lecture,
+                    hall: hall,
+                    courseName: course,
+                    doctorName: doctor,
+                    studentLevel: rowLevel || level,
+                    capacity: HALL_CAPACITIES[hall]
+                });
+            });
+
+            if (errors.length > 0) {
+                resultDiv.innerHTML = `<div class="alert alert-danger py-2"><strong>⚠️ أخطاء في الملف (${errors.length}):</strong><br>${errors.slice(0, 10).join('<br>')}${errors.length > 10 ? '<br>...' : ''}</div>`;
+                return;
+            }
+
+            if (schedule.length === 0) {
+                resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ مفيش صفوف صالحة في الملف!</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = `<div class="alert alert-info py-2">⏳ جاري حفظ ${schedule.length} صف... ممكن ياخد شوية.</div>`;
+
+            const res = await apiCall('saveProgramSchedule', {
+                payload: { program: program, level: level, schedule: schedule }
+            });
+
+            if (res.success) {
+                resultDiv.innerHTML = `<div class="alert alert-success py-2">✅ ${res.message}</div>`;
+                fileInput.value = '';
+                setTimeout(() => switchMode('view'), 2000);
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ ${res.message}</div>`;
+            }
+
+        } catch (err) {
+            resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ خطأ في قراءة الملف: ${err.message}</div>`;
+        }
     }
 
     function logoutAdmin() {
