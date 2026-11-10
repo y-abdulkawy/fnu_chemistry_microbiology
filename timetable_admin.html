@@ -577,19 +577,17 @@
             });
     
             // 1. تحديث مصفوفة القاعات في الذاكرة
-            let hallsAdded = 0;
-            extractedHalls.forEach(h => {
-                if (!HALLS.includes(h)) {
-                    HALLS.push(h); // إضافة القاعة الجديدة
-                    HALL_CAPACITIES[h] = 50; // سعة افتراضية
-                    hallsAdded++;
-                }
-            });
-    
-            if (hallsAdded > 0) {
-                resultDiv.innerHTML = `<div class="alert alert-info py-2">✅ تم اكتشاف ${hallsAdded} قاعة جديدة وإضافتها للجدول.</div>`;
+        // 1. مسح القاعات القديمة واستبدالها بالقاعات اللي في الملف فقط
+        HALLS.length = 0; // مسح المصفوفة القديمة تماماً
+        
+        extractedHalls.forEach(h => {
+            HALLS.push(h); // إضافة القاعة اللي في الملف
+            if (!HALL_CAPACITIES[h]) {
+                HALL_CAPACITIES[h] = 50; // لو القاعة جديدة، سعة افتراضية 50
             }
-    
+        });
+
+        resultDiv.innerHTML = `<div class="alert alert-info py-2">✅ تم تحديث الجدول ليعرض ${HALLS.length} قاعة بناءً على الملف المرفوع.</div>`;
             if (errors.length > 0) {
                 resultDiv.innerHTML = `<div class="alert alert-danger py-2"><strong>⚠️ أخطاء في الملف (${errors.length}):</strong><br>${errors.slice(0, 10).join('<br>')}${errors.length > 10 ? '<br>...' : ''}</div>`;
                 return;
