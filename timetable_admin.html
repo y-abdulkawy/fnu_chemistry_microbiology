@@ -5,28 +5,26 @@
     <title>إدارة الجدول الدراسي</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <style>
-        /* تنسيقات شكل الجدول الجديد */
-        .timetable-wrapper { overflow-x: auto; background: white; padding: 15px; border-radius: 10px; border: 1px solid #dee2e6; }
-        .timetable-main { border-collapse: collapse; width: 100%; min-width: 1600px; text-align: center; font-size: 12px; }
-        .timetable-main th, .timetable-main td { border: 1px solid #adb5bd; padding: 4px; }
-        .timetable-main th { background-color: #0d6efd; color: white; font-size: 14px; }
+        .timetable-wrapper { overflow-x: auto; background: white; padding: 10px; border-radius: 10px; width: 100%; border: 1px solid #dee2e6; }
+        .timetable-main { border-collapse: collapse; width: 100%; min-width: 1500px; text-align: center; font-size: 11px; }
+        .timetable-main th, .timetable-main td { border: 1px solid #adb5bd; padding: 3px; }
+        .timetable-main th { background-color: #0d6efd; color: white; font-size: 12px; }
         .day-header { background-color: #0a58ca !important; color: white; font-weight: bold; }
         .place-cell { background-color: #f8f9fa; font-weight: bold; width: 90px; color: #0d6efd; }
         .capacity-cell { background-color: #e9ecef; font-weight: bold; width: 50px; }
         
-        /* تنسيق صناديق الإدخال */
         .cell-inputs input { 
             width: 100%; 
             border: 1px solid #ced4da; 
             border-radius: 4px; 
-            font-size: 11px; 
-            padding: 4px; 
-            margin-bottom: 3px; 
+            font-size: 10px; 
+            padding: 2px; 
+            margin-bottom: 2px; 
             text-align: center; 
+            background-color: #fff;
         }
         .cell-inputs input:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25); }
         
-        /* تنسيق الخلية المحجوزة */
         .booked-cell { background-color: #f8d7da !important; }
         .booked-cell input { background-color: #f8d7da; color: #842029; font-weight: bold; border-color: #f5c2c7; }
         
@@ -57,18 +55,14 @@
     </div>
 
     <div class="row mb-3 bg-white p-3 rounded shadow-sm">
-        <!-- خانة لمدير البرنامج (ثابتة) -->
         <div class="col-md-6" id="singleProgramView" style="display: none;">
             <label class="fw-bold">البرنامج الدراسي:</label>
             <input type="text" id="programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
         </div>
-
-        <!-- قائمة منسدلة للأدمن الرئيسي -->
         <div class="col-md-6" id="allProgramsView" style="display: none;">
-            <label class="fw-bold">اختر البرنامج الدراسي:</label>
+            <label class="fw-bold">اختر البرنامج:</label>
             <select id="programSelect" class="form-select" onchange="loadSchedule()"></select>
         </div>
-
         <div class="col-md-6">
             <label class="fw-bold">الفرقة:</label>
             <select id="levelSelect" class="form-select" onchange="loadSchedule()">
@@ -80,9 +74,7 @@
     </div>
 
     <div class="timetable-wrapper shadow-sm">
-        <table class="timetable-main" id="mainTable">
-            <!-- الجدول هيتبني هنا بالجافاسكريبت -->
-        </table>
+        <table class="timetable-main" id="mainTable"></table>
     </div>
 
     <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول</button>
@@ -114,7 +106,6 @@
         } catch (err) { return { success: false, message: err.message }; }
     }
 
-    // 1. تسجيل الدخول
     async function handleAdminLogin(e) {
         e.preventDefault();
         const u = document.getElementById('adminUsername').value.trim();
@@ -131,7 +122,7 @@
             localStorage.setItem('fnu_tt_user', u);
             localStorage.setItem('fnu_tt_isSuper', res.isSuperAdmin);
             localStorage.setItem('fnu_tt_program', res.isSuperAdmin ? "" : res.programCode);
-            localStorage.setItem('fnu_tt_programName', res.isSuperAdmin ? "" : res.programName); // لحفظ اسم البرنامج
+            localStorage.setItem('fnu_tt_programName', res.isSuperAdmin ? "" : res.programName);
 
             document.getElementById('loginScreen').classList.add('d-none');
             document.getElementById('timetableScreen').classList.remove('d-none');
@@ -157,7 +148,6 @@
         }
     }
 
-    // 2. إعداد القائمة المنسدلة للأدمن الرئيسي
     async function setupProgramsDropdownForAdmin() {
         const sel = document.getElementById('programSelect');
         sel.innerHTML = '<option value="">اختر البرنامج...</option>';
@@ -168,7 +158,6 @@
         buildTable();
     }
 
-    // 3. بناء هيكل الجدول
     function buildTable() {
         const table = document.getElementById('mainTable');
         let html = '';
@@ -200,7 +189,7 @@
                             <div class="cell-inputs" id="container_${cellId}">
                                 <input type="text" placeholder="المقرر" id="${cellId}_course">
                                 <input type="text" placeholder="الدكتور" id="${cellId}_doctor">
-                                <input type="text" placeholder="الفرقة/المستوى" id="${cellId}_level">
+                                <input type="text" placeholder="الفرقة" id="${cellId}_level">
                             </div>
                         </td>
                     `;
@@ -212,12 +201,19 @@
         table.innerHTML = html;
     }
 
-    // 4. تحميل الجدول
     async function loadSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
 
-        if (!program || !level) return;
+        // لو مفيش برنامج أو فرقة، نفتح كل الخلايا ونفضيها
+        if (!program || !level) {
+            document.querySelectorAll('.cell-inputs input').forEach(input => {
+                input.value = '';
+                input.disabled = false;
+            });
+            document.querySelectorAll('.cell-inputs').forEach(div => div.parentElement.classList.remove('booked-cell'));
+            return;
+        }
 
         const res = await apiCall('getBookedSlots');
         if (res.success) {
@@ -228,8 +224,8 @@
         }
     }
 
-    // 5. تعبئة الجدول بالبيانات
     function fillTableWithData(currentProgram, currentLevel) {
+        // نفتح كل الخلايا الأول
         document.querySelectorAll('.cell-inputs input').forEach(input => {
             input.value = '';
             input.disabled = false;
@@ -264,7 +260,6 @@
         });
     }
 
-    // 6. حفظ الجدول
     async function saveSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
@@ -305,7 +300,6 @@
         if (res.success) loadSchedule();
     }
 
-    // 7. تسجيل الخروج (مسح الجلسة)
     function logoutAdmin() {
         localStorage.removeItem('fnu_tt_user');
         localStorage.removeItem('fnu_tt_isSuper');
@@ -314,7 +308,6 @@
         location.reload();
     }
 
-    // 8. التحقق من الجلسة أول ما الصفحة تحمل
     document.addEventListener('DOMContentLoaded', () => {
         const savedUser = localStorage.getItem('fnu_tt_user');
         const savedIsSuper = localStorage.getItem('fnu_tt_isSuper');
