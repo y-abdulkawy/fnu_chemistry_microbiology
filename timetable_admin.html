@@ -324,7 +324,8 @@
     async function populateAddForm() {
         const hallSelect = document.getElementById('addHall');
         hallSelect.innerHTML = '';
-        HALLS.forEach(h => hallSelect.innerHTML += `<option value="${h}">${h} (${HALL_CAPACITIES[h] || '-'} طالب)</option>`);
+        // دي هتقرأ من مصفوفة HALLS اللي بتتحدث مع كل ملف إكسيل
+        HALLS.forEach(h => hallSelect.innerHTML += `<option value="${h}">${h} (${HALL_CAPACITIES[h] || 50} طالب)</option>`);
 
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         if (!program) return;
@@ -447,64 +448,64 @@
         });
     }
 
-    async function saveSchedule() {
-        // دالة الحفظ القديمة (لو عايز تعدل كل الجدول مرة واحدة)
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
-        const level = document.getElementById('levelSelect').value;
-
-        if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
-
-        const schedule = [];
-        HALLS.forEach((hall, hallIndex) => {
-            DAYS.forEach((day, dayIndex) => {
-                LECTURES.forEach((lect, lectIndex) => {
-                    const cellId = `cell_${hallIndex}_${dayIndex}_${lectIndex}`;
-                    const course = document.getElementById(`${cellId}_course`).value.trim();
-                    const doctor = document.getElementById(`${cellId}_doctor`).value.trim();
-                    const stuLevel = document.getElementById(`${cellId}_level`).value.trim();
-
-                    if (course || doctor || stuLevel) {
-                        schedule.push({ 
-                            day: day, lecture: lect, hall: hall, 
-                            courseName: course, doctorName: doctor, studentLevel: stuLevel, 
-                            capacity: HALL_CAPACITIES[hall] 
-                        });
-                    }
+        async function saveSchedule() {
+            // دالة الحفظ القديمة (لو عايز تعدل كل الجدول مرة واحدة)
+            let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+            const level = document.getElementById('levelSelect').value;
+    
+            if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
+    
+            const schedule = [];
+            HALLS.forEach((hall, hallIndex) => {
+                DAYS.forEach((day, dayIndex) => {
+                    LECTURES.forEach((lect, lectIndex) => {
+                        const cellId = `cell_${hallIndex}_${dayIndex}_${lectIndex}`;
+                        const course = document.getElementById(`${cellId}_course`).value.trim();
+                        const doctor = document.getElementById(`${cellId}_doctor`).value.trim();
+                        const stuLevel = document.getElementById(`${cellId}_level`).value.trim();
+    
+                        if (course || doctor || stuLevel) {
+                            schedule.push({ 
+                                day: day, lecture: lect, hall: hall, 
+                                courseName: course, doctorName: doctor, studentLevel: stuLevel, 
+                                capacity: HALL_CAPACITIES[hall] 
+                            });
+                        }
+                    });
                 });
             });
-        });
-
-        if (schedule.length === 0) return alert("لم تقم بإدخال أي بيانات في الجدول.");
-
-        const btn = document.getElementById('saveBtn');
-        btn.disabled = true; btn.innerText = 'جاري الحفظ...';
-
-        const res = await apiCall('saveProgramSchedule', {
-            payload: { program: program, level: level, schedule: schedule }
-        });
-
-        btn.disabled = false; btn.innerText = '💾 حفظ الجدول';
-        alert(res.message);
-        if (res.success) loadSchedule();
-    }
-
-    // ═══════════════════════════════════════════
-    // 📤 رفع الجدول من ملف Excel
-    // ═══════════════════════════════════════════
-
-    function downloadExcelTemplate() {
-        const headers = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
-        const sample = [
-            ["2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد", "1"],
-            ["3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي", "1"]
-        ];
-        const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Timetable");
-        XLSX.writeFile(wb, "نموذج_الجدول_الدراسي.xlsx");
-    }
-
-    async function uploadExcelSchedule() {
+    
+            if (schedule.length === 0) return alert("لم تقم بإدخال أي بيانات في الجدول.");
+    
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true; btn.innerText = 'جاري الحفظ...';
+    
+            const res = await apiCall('saveProgramSchedule', {
+                payload: { program: program, level: level, schedule: schedule }
+            });
+    
+            btn.disabled = false; btn.innerText = '💾 حفظ الجدول';
+            alert(res.message);
+            if (res.success) loadSchedule();
+        }
+    
+        // ═══════════════════════════════════════════
+        // 📤 رفع الجدول من ملف Excel
+        // ═══════════════════════════════════════════
+    
+        function downloadExcelTemplate() {
+            const headers = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
+            const sample = [
+                ["2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد", "1"],
+                ["3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي", "1"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Timetable");
+            XLSX.writeFile(wb, "نموذج_الجدول_الدراسي.xlsx");
+        }
+    
+      async function uploadExcelSchedule() {
         const fileInput = document.getElementById('excelFileInput');
         const resultDiv = document.getElementById('excelUploadResult');
         const file = fileInput.files[0];
@@ -513,10 +514,10 @@
             resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر ملف أولاً</div>';
             return;
         }
-
+    
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
-
+    
         if (!program) {
             resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر البرنامج أولاً</div>';
             return;
@@ -525,33 +526,25 @@
             resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر الفرقة أولاً</div>';
             return;
         }
-
-        resultDiv.innerHTML = '<div class="alert alert-info py-2">⏳ جاري قراءة الملف...</div>';
-
+    
+        resultDiv.innerHTML = '<div class="alert alert-info py-2">⏳ جاري قراءة الملف واستخراج القاعات...</div>';
+    
         try {
             const data = await file.arrayBuffer();
             const workbook = XLSX.read(data, { type: 'array' });
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
+    
             if (rows.length === 0) {
                 resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ الملف فاضي!</div>';
                 return;
             }
-
-            // تحقق من الأعمدة المطلوبة
-            const firstRow = rows[0];
-            const requiredCols = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
-            const missing = requiredCols.filter(c => !(c in firstRow));
-            if (missing.length > 0) {
-                resultDiv.innerHTML = `<div class="alert alert-danger py-2">⚠️ أعمدة ناقصة: ${missing.join(', ')}<br>تأكد من أسماء الأعمدة في الصف الأول.</div>`;
-                return;
-            }
-
-            // تجهيز الـ schedule
+    
+            // تجهيز الـ schedule واستخراج القاعات الجديدة
             const schedule = [];
             const errors = [];
-
+            const extractedHalls = new Set(); 
+    
             rows.forEach((row, idx) => {
                 const hall = String(row.Hall || "").trim();
                 const day = String(row.Day || "").trim();
@@ -559,28 +552,19 @@
                 const course = String(row.Course || "").trim();
                 const doctor = String(row.Doctor || "").trim();
                 const rowLevel = String(row.Level || "").trim();
-
-                const rowNum = idx + 2; // +2 عشان الهيدر وبنبدأ من 1
-
+    
+                const rowNum = idx + 2;
+    
                 if (!hall && !day && !lecture && !course) return; // صف فاضي
-
+    
                 if (!hall || !day || !lecture) {
                     errors.push(`صف ${rowNum}: ناقص Hall/Day/Lecture`);
                     return;
                 }
-                if (!HALLS.includes(hall)) {
-                    errors.push(`صف ${rowNum}: القاعة "${hall}" غير معروفة`);
-                    return;
-                }
-                if (!DAYS.includes(day)) {
-                    errors.push(`صف ${rowNum}: اليوم "${day}" غير معروف`);
-                    return;
-                }
-                if (!LECTURES.includes(lecture)) {
-                    errors.push(`صف ${rowNum}: المحاضرة "${lecture}" غير معروفة`);
-                    return;
-                }
-
+                
+                // بنجمع القاعات اللي في الملف
+                extractedHalls.add(hall);
+    
                 schedule.push({
                     day: day,
                     lecture: lecture,
@@ -588,34 +572,51 @@
                     courseName: course,
                     doctorName: doctor,
                     studentLevel: rowLevel || level,
-                    capacity: HALL_CAPACITIES[hall]
+                    capacity: HALL_CAPACITIES[hall] || 50 // لو القاعة جديدة، السعة الافتراضية 50
                 });
             });
-
+    
+            // 1. تحديث مصفوفة القاعات في الذاكرة
+            let hallsAdded = 0;
+            extractedHalls.forEach(h => {
+                if (!HALLS.includes(h)) {
+                    HALLS.push(h); // إضافة القاعة الجديدة
+                    HALL_CAPACITIES[h] = 50; // سعة افتراضية
+                    hallsAdded++;
+                }
+            });
+    
+            if (hallsAdded > 0) {
+                resultDiv.innerHTML = `<div class="alert alert-info py-2">✅ تم اكتشاف ${hallsAdded} قاعة جديدة وإضافتها للجدول.</div>`;
+            }
+    
             if (errors.length > 0) {
                 resultDiv.innerHTML = `<div class="alert alert-danger py-2"><strong>⚠️ أخطاء في الملف (${errors.length}):</strong><br>${errors.slice(0, 10).join('<br>')}${errors.length > 10 ? '<br>...' : ''}</div>`;
                 return;
             }
-
+    
             if (schedule.length === 0) {
                 resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ مفيش صفوف صالحة في الملف!</div>';
                 return;
             }
-
+    
+            // 2. إعادة بناء الجدول عشان يظهر القاعات الجديدة
+            buildTable();
+    
             resultDiv.innerHTML = `<div class="alert alert-info py-2">⏳ جاري حفظ ${schedule.length} صف... ممكن ياخد شوية.</div>`;
-
+    
             const res = await apiCall('saveProgramSchedule', {
                 payload: { program: program, level: level, schedule: schedule }
             });
-
+    
             if (res.success) {
                 resultDiv.innerHTML = `<div class="alert alert-success py-2">✅ ${res.message}</div>`;
                 fileInput.value = '';
-                setTimeout(() => switchMode('view'), 2000);
+                setTimeout(() => switchMode('view'), 2000); // نروح لوضع العرض عشان نشوف الجدول
             } else {
                 resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ ${res.message}</div>`;
             }
-
+    
         } catch (err) {
             resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ خطأ في قراءة الملف: ${err.message}</div>`;
         }
