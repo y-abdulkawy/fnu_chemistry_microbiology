@@ -130,13 +130,23 @@
     }
 
     // إعداد قائمة البرامج وتثبيت برنامج المدير
-    function setupProgramsDropdown() {
+    // إعداد قائمة البرامج وتثبيت برنامج المدير
+    async function setupProgramsDropdown() {
         const sel = document.getElementById('programSelect');
-        sel.innerHTML = '';
-        for (const key in PROGRAMS) {
-            sel.innerHTML += `<option value="${key}">${PROGRAMS[key]}</option>`;
-        }
+        sel.innerHTML = '<option value="">جاري التحميل...</option>';
         
+        // بنجيب قائمة البرامج من السيرفر
+        const res = await apiCall('getProgramsList');
+        sel.innerHTML = '';
+        
+        if (res.success && res.programs) {
+            res.programs.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+        } else {
+            sel.innerHTML = '<option value="">خطأ في تحميل البرامج</option>';
+        }
+
         // تثبيت البرنامج الخاص بالمدير
         sel.value = currentAdminProgram;
         sel.disabled = true; // قفل القائمة عشان ميعرفش يغير البرنامج
@@ -144,6 +154,7 @@
         loadSchedule();
     }
 
+    
     async function loadSchedule() {
         const program = document.getElementById('programSelect').value;
         const level = document.getElementById('levelSelect').value;
