@@ -26,8 +26,7 @@
         .cell-inputs input:focus { outline: none; border-color: #0d6efd; box-shadow: 0 0 0 0.1rem rgba(13,110,253,.25); }
         
         .booked-cell { background-color: #f8d7da !important; }
-        .booked-cell input { background-color: #f8d7da; color: #842029; font-weight: bold; border-color: #f5c2c7; }
-        
+        .booked-cell input { background-color: #f8d7da; color: #842029; font-weight: bold; border-color: #f5c2c7; font-size: 10px; }        
         .login-card { max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; }
     </style>
 </head>
@@ -53,7 +52,11 @@
             <button class="btn btn-outline-danger btn-sm fw-bold" onclick="logoutAdmin()">خروج</button>
         </div>
     </div>
+     <div class="alert alert-info py-2 small mb-3">
+        💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى، ولا يمكن تعديلها. يمكنك الكتابة في الخلايا البيضاء فقط.
+    </div>
 
+    
     <div class="row mb-3 bg-white p-3 rounded shadow-sm">
         <div class="col-md-6" id="singleProgramView" style="display: none;">
             <label class="fw-bold">البرنامج الدراسي:</label>
@@ -249,8 +252,15 @@
                         document.getElementById(`${cellId}_doctor`).value = booking.doctorName || "";
                         document.getElementById(`${cellId}_level`).value = booking.studentLevel || "";
                     } else {
+                        // لو محجوز من دكتور تاني
                         container.parentElement.classList.add('booked-cell');
+                        
+                        // نعرض اسم المقرر والدكتور اللي حاجزين
                         document.getElementById(`${cellId}_course`).value = booking.courseName || "محجوز";
+                        document.getElementById(`${cellId}_doctor`).value = "د. " + (booking.doctorName || "غير محدد");
+                        document.getElementById(`${cellId}_level`).value = booking.studentLevel || "";
+                        
+                        // نقفل الخلايا عشان ميعرفش يعدلها
                         document.getElementById(`${cellId}_course`).disabled = true;
                         document.getElementById(`${cellId}_doctor`).disabled = true;
                         document.getElementById(`${cellId}_level`).disabled = true;
