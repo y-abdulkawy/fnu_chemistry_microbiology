@@ -118,13 +118,11 @@
             document.getElementById('welcomeUser').innerText = "مرحباً، " + u;
 
             if (res.isSuperAdmin) {
-                // أدمن رئيسي: نظهر القائمة المنسدلة
                 isSuperAdmin = true;
                 document.getElementById('allProgramsView').style.display = 'block';
                 document.getElementById('singleProgramView').style.display = 'none';
                 setupProgramsDropdownForAdmin();
             } else {
-                // مدير برنامج: نظهر الخانة الثابتة
                 isSuperAdmin = false;
                 currentAdminProgram = res.programCode;
                 document.getElementById('allProgramsView').style.display = 'none';
@@ -156,7 +154,6 @@
     async function loadSchedule() {
         let program = currentAdminProgram; 
         
-        // لو إحنا في وضع الأدمن الرئيسي، بناخد البرنامج من القائمة
         if (isSuperAdmin) {
             program = document.getElementById('programSelect').value;
         }
