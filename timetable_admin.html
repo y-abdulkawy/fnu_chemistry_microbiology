@@ -38,6 +38,8 @@
         }
         .booked-cell input:disabled { opacity: 1; cursor: not-allowed; }     
         .login-card { max-width: 400px; margin: 100px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); background: #fff; }
+        
+        .checkbox-group { max-height: 100px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px; background: #f8f9fa; }
     </style>
 </head>
 <body class="bg-light">
@@ -74,24 +76,31 @@
 
     <!-- 1. قسم عرض الجدول -->
     <div id="viewContainer">
-        <!-- فلاتر العرض -->
+        <!-- فلاتر العرض (مربعات اختيار) -->
         <div class="row mb-3 bg-white p-3 rounded shadow-sm">
             <div class="col-md-6" id="view_singleProgramView" style="display: none;">
                 <label class="fw-bold">البرنامج الدراسي:</label>
                 <input type="text" id="view_programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
             </div>
             <div class="col-md-6" id="view_allProgramsView" style="display: none;">
-                <label class="fw-bold">اختر البرنامج:</label>
-                <select id="view_programSelect" class="form-select" onchange="loadSchedule()"></select>
+                <label class="fw-bold">اختر البرامج (يمكن اختيار أكثر من برنامج):</label>
+                <div class="checkbox-group" id="view_programCheckboxes"></div>
             </div>
+            
             <div class="col-md-3">
                 <label class="fw-bold">الفرقة:</label>
-                <select id="view_levelSelect" class="form-select" onchange="loadSchedule()">
-                    <option value="">اختر الفرقة...</option>
-                    <option value="1">الفرقة الأولى</option>
-                    <option value="2">الفرقة الثانية</option>
-                </select>
+                <div class="checkbox-group">
+                    <div class="form-check">
+                        <input class="form-check-input view-level-cb" type="checkbox" value="1" id="view_lvl_1" onchange="loadSchedule()">
+                        <label class="form-check-label fw-bold" for="view_lvl_1">الفرقة الأولى</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input view-level-cb" type="checkbox" value="2" id="view_lvl_2" onchange="loadSchedule()">
+                        <label class="form-check-label fw-bold" for="view_lvl_2">الفرقة الثانية</label>
+                    </div>
+                </div>
             </div>
+            
             <div class="col-md-3">
                 <label class="fw-bold">العام الدراسي:</label>
                 <select id="view_academicYearSelect" class="form-select" onchange="loadSchedule()">
@@ -100,6 +109,7 @@
                     <option value="2026-2027">2026-2027</option>
                 </select>
             </div>
+            
             <div class="col-md-3">
                 <label class="fw-bold">الفصل الدراسي:</label>
                 <select id="view_semesterSelect" class="form-select" onchange="loadSchedule()">
@@ -110,14 +120,18 @@
             </div>
         </div>
 
-        <div class="alert alert-info py-2 small mb-3">
-            💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى، ولا يمكن تعديلها.
+        <div class="alert alert-info py-2 small mb-3" id="viewModeAlert">
+            💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى.
         </div>
 
         <div class="timetable-wrapper shadow-sm">
             <table class="timetable-main" id="mainTable"></table>
         </div>
-        <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول</button>
+        
+        <!-- زرار الحفظ بيظهر بس لو فرقة واحدة مختارة -->
+        <div id="saveBtnContainer" class="d-none">
+            <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول (للفرقة المحددة)</button>
+        </div>
     </div>
 
     <!-- 2. قسم الإضافة اليدوية -->
@@ -311,15 +325,23 @@
     }
 
     async function setupProgramsDropdownForAdmin() {
-        const viewSel = document.getElementById('view_programSelect');
+        const viewCbContainer = document.getElementById('view_programCheckboxes');
         const manualSel = document.getElementById('manual_programSelect');
-        viewSel.innerHTML = '<option value="">اختر البرنامج...</option>';
+        
+        viewCbContainer.innerHTML = '';
         manualSel.innerHTML = '<option value="">اختر البرنامج...</option>';
         
         const res = await apiCall('getProgramsList');
         if (res.success && res.programs) {
             res.programs.forEach(p => { 
-                viewSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; 
+                // للعرض: Checkboxes
+                viewCbContainer.innerHTML += `
+                    <div class="form-check">
+                        <input class="form-check-input view-program-cb" type="checkbox" value="${p.id}" id="view_prog_${p.id}" onchange="loadSchedule()">
+                        <label class="form-check-label fw-bold" for="view_prog_${p.id}">${p.name}</label>
+                    </div>
+                `;
+                // للإضافة: Dropdown
                 manualSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; 
             });
         }
@@ -358,9 +380,9 @@
                         html += `
                             <td style="padding: 2px;">
                                 <div class="cell-inputs" id="container_${cellId}">
-                                    <input type="text" placeholder="المقرر" id="${cellId}_course">
-                                    <input type="text" placeholder="الدكتور" id="${cellId}_doctor">
-                                    <input type="text" placeholder="الفرقة" id="${cellId}_level">
+                                    <input type="text" placeholder="المقرر" id="${cellId}_course" readonly>
+                                    <input type="text" placeholder="الدكتور" id="${cellId}_doctor" readonly>
+                                    <input type="text" placeholder="الفرقة" id="${cellId}_level" readonly>
                                 </div>
                             </td>
                         `;
@@ -401,6 +423,19 @@
             btnUpload.className = 'btn btn-primary fw-bold';
             uploadContainer.classList.remove('d-none');
         }
+    }
+
+    // دالة مساعدة لجلب الفرق المختارة
+    function getSelectedLevels() {
+        const checkboxes = document.querySelectorAll('.view-level-cb:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    // دالة مساعدة لجلب البرامج المختارة
+    function getSelectedPrograms() {
+        if (!isSuperAdmin) return [currentAdminProgram];
+        const checkboxes = document.querySelectorAll('.view-program-cb:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
     }
 
     async function populateAddForm() {
@@ -477,15 +512,30 @@
     }
 
     async function loadSchedule() {
-        let program = isSuperAdmin ? document.getElementById('view_programSelect').value : currentAdminProgram;
-        const level = document.getElementById('view_levelSelect').value;
+        const selectedPrograms = getSelectedPrograms();
+        const selectedLevels = getSelectedLevels();
         const academicYear = document.getElementById('view_academicYearSelect').value;
         const semester = document.getElementById('view_semesterSelect').value;
 
-        if (!program || !level) {
+        // إظهار/إخفاء زرار الحفظ حسب عدد الفرق المختارة
+        const saveBtnContainer = document.getElementById('saveBtnContainer');
+        if (selectedLevels.length === 1 && selectedPrograms.length === 1) {
+            saveBtnContainer.classList.remove('d-none');
+            document.querySelectorAll('.cell-inputs input').forEach(inp => {
+                if (!inp.disabled) inp.readOnly = false; // تفعيل التعديل
+            });
+        } else {
+            saveBtnContainer.classList.add('d-none');
+            document.querySelectorAll('.cell-inputs input').forEach(inp => {
+                inp.readOnly = true; // قفل التعديل لو أكتر من فرقة
+            });
+        }
+
+        if (selectedPrograms.length === 0 || selectedLevels.length === 0) {
             document.querySelectorAll('.cell-inputs input').forEach(input => {
                 input.value = '';
                 input.disabled = false;
+                input.readOnly = true;
             });
             document.querySelectorAll('.cell-inputs').forEach(div => div.parentElement.classList.remove('booked-cell'));
             return;
@@ -504,16 +554,17 @@
             });
             
             buildTable(); 
-            fillTableWithData(program, level, academicYear, semester);
+            fillTableWithData(selectedPrograms, selectedLevels, academicYear, semester);
         } else {
             alert("خطأ في جلب البيانات: " + res.message);
         }
     }
 
-    function fillTableWithData(currentProgram, currentLevel, currentYear, currentSemester) {
+    function fillTableWithData(selectedPrograms, selectedLevels, currentYear, currentSemester) {
         document.querySelectorAll('.cell-inputs input').forEach(input => {
             input.value = '';
             input.disabled = false;
+            input.readOnly = true;
         });
         document.querySelectorAll('.cell-inputs').forEach(div => div.parentElement.classList.remove('booked-cell'));
 
@@ -529,12 +580,26 @@
                 const container = document.getElementById(`container_${cellId}`);
                 
                 if (container) {
-                    const isMine = (booking.program === currentProgram && booking.level === currentLevel);
+                    // هل الحجز ده تابع للبرامج والفرق المختارة؟
+                    const isMine = selectedPrograms.includes(booking.program) && selectedLevels.includes(booking.level);
                     
                     if (isMine) {
-                        document.getElementById(`${cellId}_course`).value = booking.courseName || "";
+                        let courseTxt = booking.courseName || "";
+                        // لو أكتر من فرقة معروضة، نضيف اسم الفرقة عشان نعرف نفرق
+                        if (selectedLevels.length > 1) {
+                            courseTxt = `[ف${booking.level}] ${courseTxt}`;
+                        }
+                        
+                        document.getElementById(`${cellId}_course`).value = courseTxt;
                         document.getElementById(`${cellId}_doctor`).value = booking.doctorName || "";
                         document.getElementById(`${cellId}_level`).value = booking.studentLevel || "";
+                        
+                        // لو مختار فرقة واحدة بس، نخلي الخلية قابلة للتعديل (عشان الحفظ)
+                        if (selectedLevels.length === 1 && selectedPrograms.length === 1) {
+                            document.getElementById(`${cellId}_course`).readOnly = false;
+                            document.getElementById(`${cellId}_doctor`).readOnly = false;
+                            document.getElementById(`${cellId}_level`).readOnly = false;
+                        }
                     } else {
                         container.parentElement.classList.add('booked-cell');
                         document.getElementById(`${cellId}_course`).value = booking.courseName || "محجوز";
@@ -551,12 +616,17 @@
     }
 
     async function saveSchedule() {
-        let program = isSuperAdmin ? document.getElementById('view_programSelect').value : currentAdminProgram;
-        const level = document.getElementById('view_levelSelect').value;
+        const selectedPrograms = getSelectedPrograms();
+        const selectedLevels = getSelectedLevels();
         const academicYear = document.getElementById('view_academicYearSelect').value;
         const semester = document.getElementById('view_semesterSelect').value;
 
-        if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
+        if (selectedPrograms.length !== 1 || selectedLevels.length !== 1) {
+            return alert("لا يمكن الحفظ إلا عند اختيار برنامج واحد وفرقة واحدة.");
+        }
+
+        const program = selectedPrograms[0];
+        const level = selectedLevels[0];
 
         const schedule = [];
         HALLS.forEach((hall, hallIndex) => {
@@ -587,7 +657,7 @@
             payload: { program: program, level: level, academicYear: academicYear, semester: semester, schedule: schedule }
         });
 
-        btn.disabled = false; btn.innerText = '💾 حفظ الجدول';
+        btn.disabled = false; btn.innerText = '💾 حفظ الجدول (للفرقة المحددة)';
         alert(res.message);
         if (res.success) loadSchedule();
     }
@@ -633,7 +703,6 @@
             const extractedHalls = new Set(); 
 
             rows.forEach((row, idx) => {
-                // قراءة البيانات من الملف نفسه
                 const rowProgram = String(row.Program || "").trim();
                 const rowYear = String(row.AcademicYear || "").trim();
                 const rowSemester = String(row.Semester || "").trim();
@@ -647,9 +716,8 @@
 
                 const rowNum = idx + 2;
 
-                if (!rowProgram && !hall && !day && !lecture && !course) return; // صف فاضي
+                if (!rowProgram && !hall && !day && !lecture && !course) return; 
 
-                // التأكد من وجود البيانات الأساسية
                 if (!rowProgram || !rowYear || !rowSemester || !rowLevel) {
                     errors.push(`صف ${rowNum}: تأكد من وجود (Program, AcademicYear, Semester, Level)`);
                     return;
@@ -707,7 +775,6 @@
             let failCount = 0;
             let resultMessages = [];
 
-            // لوب بيحفظ كل مجموعة (برنامج + فرقة + عام + فصل) لوحدها
             for (const key in groupedSchedules) {
                 const group = groupedSchedules[key];
                 const res = await apiCall('saveProgramSchedule', {
