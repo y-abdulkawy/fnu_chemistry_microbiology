@@ -79,12 +79,28 @@
             <label class="fw-bold">اختر البرنامج:</label>
             <select id="programSelect" class="form-select" onchange="loadSchedule()"></select>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-3">
             <label class="fw-bold">الفرقة:</label>
             <select id="levelSelect" class="form-select" onchange="loadSchedule()">
                 <option value="">اختر الفرقة...</option>
                 <option value="1">الفرقة الأولى</option>
                 <option value="2">الفرقة الثانية</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="fw-bold">العام الدراسي:</label>
+            <select id="academicYearSelect" class="form-select" onchange="loadSchedule()">
+                <option value="2024-2025">2024-2025</option>
+                <option value="2025-2026">2025-2026</option>
+                <option value="2026-2027">2026-2027</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="fw-bold">الفصل الدراسي:</label>
+            <select id="semesterSelect" class="form-select" onchange="loadSchedule()">
+                <option value="الفصل الأول">الفصل الأول</option>
+                <option value="الفصل الثاني">الفصل الثاني</option>
+                <option value="الفصل الصيفي">الفصل الصيفي</option>
             </select>
         </div>
     </div>
@@ -396,9 +412,13 @@
         }
     }
 
-    async function loadSchedule() {
+
+
+        async function loadSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
+        const academicYear = document.getElementById('academicYearSelect').value;
+        const semester = document.getElementById('semesterSelect').value;
 
         if (!program || !level) {
             document.querySelectorAll('.cell-inputs input').forEach(input => {
@@ -409,7 +429,8 @@
             return;
         }
 
-        const res = await apiCall('getBookedSlots');
+        const res = await apiCall('getBookedSlots', { academicYear: academicYear, semester: semester });
+        
         if (res.success) {
             allBookedSlots = res.booked;
             
@@ -421,13 +442,13 @@
             });
             
             buildTable(); 
-            fillTableWithData(program, level);
+            fillTableWithData(program, level, academicYear, semester);
         } else {
             alert("خطأ في جلب البيانات: " + res.message);
         }
     }
 
-    function fillTableWithData(currentProgram, currentLevel) {
+    function fillTableWithData(currentProgram, currentLevel, currentYear, currentSemester) {
         document.querySelectorAll('.cell-inputs input').forEach(input => {
             input.value = '';
             input.disabled = false;
@@ -435,6 +456,8 @@
         document.querySelectorAll('.cell-inputs').forEach(div => div.parentElement.classList.remove('booked-cell'));
 
         allBookedSlots.forEach(booking => {
+            if (booking.academicYear !== currentYear || booking.semester !== currentSemester) return;
+
             const hallIndex = HALLS.indexOf(booking.hall);
             const dayIndex = DAYS.indexOf(booking.day);
             const lectIndex = LECTURES.indexOf(booking.lecture);
@@ -464,10 +487,12 @@
             }
         });
     }
-
-    async function saveSchedule() {
+    
+       async function saveSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
+        const academicYear = document.getElementById('academicYearSelect').value;
+        const semester = document.getElementById('semesterSelect').value;
 
         if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
 
@@ -497,7 +522,7 @@
         btn.disabled = true; btn.innerText = 'جاري الحفظ...';
 
         const res = await apiCall('saveProgramSchedule', {
-            payload: { program: program, level: level, schedule: schedule }
+            payload: { program: program, level: level, academicYear: academicYear, semester: semester, schedule: schedule }
         });
 
         btn.disabled = false; btn.innerText = '💾 حفظ الجدول';
@@ -521,7 +546,8 @@
         XLSX.writeFile(wb, "نموذج_الجدول_الدراسي.xlsx");
     }
 
-    async function uploadExcelSchedule() {
+
+        async function uploadExcelSchedule() {
         const fileInput = document.getElementById('excelFileInput');
         const resultDiv = document.getElementById('excelUploadResult');
         const file = fileInput.files[0];
@@ -533,6 +559,8 @@
 
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
+        const academicYear = document.getElementById('academicYearSelect').value;
+        const semester = document.getElementById('semesterSelect').value;
 
         if (!program) {
             resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر البرنامج أولاً</div>';
@@ -600,7 +628,6 @@
                 return;
             }
 
-            // 💡 مسح القاعات القديمة واستبدالها بالجديدة من الملف
             HALLS = []; 
             HALL_CAPACITIES = {};
             
@@ -609,12 +636,12 @@
                 HALL_CAPACITIES[h] = 50; 
             });
 
-            buildTable(); // إعادة بناء الجدول بالقاعات الجديدة بس
+            buildTable(); 
 
             resultDiv.innerHTML = `<div class="alert alert-info py-2">⏳ جاري حفظ ${schedule.length} صف...</div>`;
 
             const res = await apiCall('saveProgramSchedule', {
-                payload: { program: program, level: level, schedule: schedule }
+                payload: { program: program, level: level, academicYear: academicYear, semester: semester, schedule: schedule }
             });
 
             if (res.success) {
@@ -628,7 +655,7 @@
         } catch (err) {
             resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ خطأ في قراءة الملف: ${err.message}</div>`;
         }
-    } 
+    }
 
     function logoutAdmin() {
         localStorage.removeItem('fnu_tt_user');
