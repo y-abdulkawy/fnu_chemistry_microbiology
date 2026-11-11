@@ -65,46 +65,6 @@
         </div>
     </div>
 
-    <div class="alert alert-info py-2 small mb-3">
-        💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى، ولا يمكن تعديلها. يمكنك الكتابة في الخلايا البيضاء فقط.
-    </div>
-
-    <!-- اختيار البرنامج والفرقة -->
-    <div class="row mb-3 bg-white p-3 rounded shadow-sm">
-        <div class="col-md-6" id="singleProgramView" style="display: none;">
-            <label class="fw-bold">البرنامج الدراسي:</label>
-            <input type="text" id="programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
-        </div>
-        <div class="col-md-6" id="allProgramsView" style="display: none;">
-            <label class="fw-bold">اختر البرنامج:</label>
-            <select id="programSelect" class="form-select" onchange="loadSchedule()"></select>
-        </div>
-        <div class="col-md-3">
-            <label class="fw-bold">الفرقة:</label>
-            <select id="levelSelect" class="form-select" onchange="loadSchedule()">
-                <option value="">اختر الفرقة...</option>
-                <option value="1">الفرقة الأولى</option>
-                <option value="2">الفرقة الثانية</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="fw-bold">العام الدراسي:</label>
-            <select id="academicYearSelect" class="form-select" onchange="loadSchedule()">
-                <option value="2024-2025">2024-2025</option>
-                <option value="2025-2026">2025-2026</option>
-                <option value="2026-2027">2026-2027</option>
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label class="fw-bold">الفصل الدراسي:</label>
-            <select id="semesterSelect" class="form-select" onchange="loadSchedule()">
-                <option value="الفصل الأول">الفصل الأول</option>
-                <option value="الفصل الثاني">الفصل الثاني</option>
-                <option value="الفصل الصيفي">الفصل الصيفي</option>
-            </select>
-        </div>
-    </div>
-
     <!-- أزرار التنقل بين التابات -->
     <div class="btn-group w-100 mb-3 shadow-sm" role="group">
         <button type="button" class="btn btn-primary fw-bold" id="btnTabView" onclick="switchTab('view')">👁️ عرض الجدول</button>
@@ -114,6 +74,46 @@
 
     <!-- 1. قسم عرض الجدول -->
     <div id="viewContainer">
+        <!-- فلاتر العرض -->
+        <div class="row mb-3 bg-white p-3 rounded shadow-sm">
+            <div class="col-md-6" id="view_singleProgramView" style="display: none;">
+                <label class="fw-bold">البرنامج الدراسي:</label>
+                <input type="text" id="view_programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
+            </div>
+            <div class="col-md-6" id="view_allProgramsView" style="display: none;">
+                <label class="fw-bold">اختر البرنامج:</label>
+                <select id="view_programSelect" class="form-select" onchange="loadSchedule()"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">الفرقة:</label>
+                <select id="view_levelSelect" class="form-select" onchange="loadSchedule()">
+                    <option value="">اختر الفرقة...</option>
+                    <option value="1">الفرقة الأولى</option>
+                    <option value="2">الفرقة الثانية</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">العام الدراسي:</label>
+                <select id="view_academicYearSelect" class="form-select" onchange="loadSchedule()">
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                    <option value="2026-2027">2026-2027</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">الفصل الدراسي:</label>
+                <select id="view_semesterSelect" class="form-select" onchange="loadSchedule()">
+                    <option value="الفصل الأول">الفصل الأول</option>
+                    <option value="الفصل الثاني">الفصل الثاني</option>
+                    <option value="الفصل الصيفي">الفصل الصيفي</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="alert alert-info py-2 small mb-3">
+            💡 <strong>ملاحظة:</strong> الخلايا باللون <span class="text-danger fw-bold">الأحمر</span> محجوزة بواسطة برامج أخرى، ولا يمكن تعديلها.
+        </div>
+
         <div class="timetable-wrapper shadow-sm">
             <table class="timetable-main" id="mainTable"></table>
         </div>
@@ -122,6 +122,42 @@
 
     <!-- 2. قسم الإضافة اليدوية -->
     <div id="manualAddContainer" class="d-none">
+        <!-- فلاتر الإضافة اليدوية -->
+        <div class="row mb-3 bg-white p-3 rounded shadow-sm">
+            <div class="col-md-6" id="manual_singleProgramView" style="display: none;">
+                <label class="fw-bold">البرنامج الدراسي:</label>
+                <input type="text" id="manual_programDisplay" class="form-control" readonly style="background-color: #e9ecef; font-weight: bold; color: #0d6efd;">
+            </div>
+            <div class="col-md-6" id="manual_allProgramsView" style="display: none;">
+                <label class="fw-bold">اختر البرنامج:</label>
+                <select id="manual_programSelect" class="form-select" onchange="populateAddForm()"></select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">الفرقة:</label>
+                <select id="manual_levelSelect" class="form-select" onchange="populateAddForm()">
+                    <option value="">اختر الفرقة...</option>
+                    <option value="1">الفرقة الأولى</option>
+                    <option value="2">الفرقة الثانية</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">العام الدراسي:</label>
+                <select id="manual_academicYearSelect" class="form-select" onchange="populateAddForm()">
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                    <option value="2026-2027">2026-2027</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fw-bold">الفصل الدراسي:</label>
+                <select id="manual_semesterSelect" class="form-select" onchange="populateAddForm()">
+                    <option value="الفصل الأول">الفصل الأول</option>
+                    <option value="الفصل الثاني">الفصل الثاني</option>
+                    <option value="الفصل الصيفي">الفصل الصيفي</option>
+                </select>
+            </div>
+        </div>
+
         <!-- إضافة مقرر ودكتور جديد -->
         <div class="bg-white p-4 rounded shadow-sm mb-4">
             <h5 class="fw-bold text-success mb-3">1️⃣ إضافة مقرر ودكتور جديد للبرنامج</h5>
@@ -177,12 +213,15 @@
     <!-- 3. قسم رفع ملف الإكسيل -->
     <div id="uploadContainer" class="d-none">
         <div class="bg-white p-4 rounded shadow-sm mb-4">
-            <h5 class="fw-bold text-warning mb-3">3️⃣ رفع الجدول من ملف Excel</h5>
+            <h5 class="fw-bold text-warning mb-3">📤 رفع الجدول من ملف Excel</h5>
             <div class="alert alert-warning py-2 small">
-                ⚠️ <strong>تنسيق الملف المطلوب:</strong> أعمدة بالترتيب:
+                ⚠️ <strong>تنسيق الملف المطلوب:</strong> يجب أن يحتوي الملف على الأعمدة دي بالترتيب:
+                <br>
                 <code>Program</code> | <code>AcademicYear</code> | <code>Semester</code> | <code>Level</code> | <code>Hall</code> | <code>Day</code> | <code>Lecture</code> | <code>Course</code> | <code>Doctor</code>
-                <br>الصف الأول لازم يكون هيدر بأسماء الأعمدة دي.
-                <a href="#" onclick="downloadExcelTemplate(); return false;" class="fw-bold">📄 تحميل نموذج جاهز</a>
+                <br>
+                <span class="text-danger fw-bold">هام جداً:</span> الكود هيقرأ (البرنامج، العام، الفصل، الفرقة) من الملف نفسه، ويحفظ كل صف في مكانه الصح.
+                <br><br>
+                <a href="#" onclick="downloadExcelTemplate(); return false;" class="btn btn-outline-dark btn-sm fw-bold">📄 تحميل نموذج جاهز</a>
             </div>
             <div class="row g-2">
                 <div class="col-md-9">
@@ -246,15 +285,22 @@
 
             if (res.isSuperAdmin) {
                 isSuperAdmin = true;
-                document.getElementById('allProgramsView').style.display = 'block';
-                document.getElementById('singleProgramView').style.display = 'none';
+                document.getElementById('view_allProgramsView').style.display = 'block';
+                document.getElementById('view_singleProgramView').style.display = 'none';
+                document.getElementById('manual_allProgramsView').style.display = 'block';
+                document.getElementById('manual_singleProgramView').style.display = 'none';
                 setupProgramsDropdownForAdmin();
             } else {
                 isSuperAdmin = false;
                 currentAdminProgram = res.programCode;
-                document.getElementById('allProgramsView').style.display = 'none';
-                document.getElementById('singleProgramView').style.display = 'block';
-                document.getElementById('programDisplay').value = res.programName;
+                document.getElementById('view_allProgramsView').style.display = 'none';
+                document.getElementById('view_singleProgramView').style.display = 'block';
+                document.getElementById('view_programDisplay').value = res.programName;
+
+                document.getElementById('manual_allProgramsView').style.display = 'none';
+                document.getElementById('manual_singleProgramView').style.display = 'block';
+                document.getElementById('manual_programDisplay').value = res.programName;
+
                 buildTable();
                 loadSchedule();
             }
@@ -265,11 +311,17 @@
     }
 
     async function setupProgramsDropdownForAdmin() {
-        const sel = document.getElementById('programSelect');
-        sel.innerHTML = '<option value="">اختر البرنامج...</option>';
+        const viewSel = document.getElementById('view_programSelect');
+        const manualSel = document.getElementById('manual_programSelect');
+        viewSel.innerHTML = '<option value="">اختر البرنامج...</option>';
+        manualSel.innerHTML = '<option value="">اختر البرنامج...</option>';
+        
         const res = await apiCall('getProgramsList');
         if (res.success && res.programs) {
-            res.programs.forEach(p => { sel.innerHTML += `<option value="${p.id}">${p.name}</option>`; });
+            res.programs.forEach(p => { 
+                viewSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; 
+                manualSel.innerHTML += `<option value="${p.id}">${p.name}</option>`; 
+            });
         }
         buildTable();
     }
@@ -293,7 +345,7 @@
         html += `</tr>`;
 
         if (HALLS.length === 0) {
-            html += `<tr><td colspan="32" class="text-center text-muted fw-bold py-4">⚠️ لا توجد قاعات. يرجى رفع ملف إكسيل بالجدول أو إضافة صفوف يدوياً.</td></tr>`;
+            html += `<tr><td colspan="32" class="text-center text-muted fw-bold py-4">⚠️ لا توجد قاعات. يرجى رفع ملف إكسيل أو إضافة صفوف يدوياً.</td></tr>`;
         } else {
             HALLS.forEach((hall, hallIndex) => {
                 html += `<tr>`;
@@ -320,7 +372,6 @@
         table.innerHTML = html;
     }
 
-    // التبديل بين التابات الثلاثة
     function switchTab(tab) {
         const btnView = document.getElementById('btnTabView');
         const btnManual = document.getElementById('btnTabManual');
@@ -330,7 +381,6 @@
         const manualContainer = document.getElementById('manualAddContainer');
         const uploadContainer = document.getElementById('uploadContainer');
 
-        // إخفاء الكل وإرجاع الأزرار للون الشفاف
         viewContainer.classList.add('d-none');
         manualContainer.classList.add('d-none');
         uploadContainer.classList.add('d-none');
@@ -339,7 +389,6 @@
         btnManual.className = 'btn btn-outline-primary fw-bold';
         btnUpload.className = 'btn btn-outline-primary fw-bold';
 
-        // إظهار القسم المطلوب
         if (tab === 'view') {
             btnView.className = 'btn btn-primary fw-bold';
             viewContainer.classList.remove('d-none');
@@ -359,12 +408,12 @@
         hallSelect.innerHTML = '';
         
         if (HALLS.length === 0) {
-            hallSelect.innerHTML = '<option value="">⚠️ ارفع ملف إكسيل أو أضف قاعة أولاً</option>';
+            hallSelect.innerHTML = '<option value="">⚠️ ارفع ملف إكسيل أولاً عشان تتضاف القاعات</option>';
         } else {
             HALLS.forEach(h => hallSelect.innerHTML += `<option value="${h}">${h} (${HALL_CAPACITIES[h] || 50} طالب)</option>`);
         }
 
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        let program = isSuperAdmin ? document.getElementById('manual_programSelect').value : currentAdminProgram;
         if (!program) return;
 
         const res = await apiCall('getSubjects', { program: program });
@@ -378,11 +427,11 @@
     }
 
     async function saveNewSubject() {
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
+        let program = isSuperAdmin ? document.getElementById('manual_programSelect').value : currentAdminProgram;
         const course = document.getElementById('newCourseName').value.trim();
         const doctor = document.getElementById('newDoctorName').value.trim();
 
-        if (!program) return alert("اختر البرنامج أولاً");
+        if (!program) return alert("اختر البرنامج أولاً من الفلاتر فوق");
         if (!course || !doctor) return alert("اكتب اسم المقرر والدكتور");
 
         const res = await apiCall('addSubject', { payload: { program: program, courseName: course, doctorName: doctor } });
@@ -395,10 +444,10 @@
     }
 
     async function addRowToSchedule() {
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
-        const level = document.getElementById('levelSelect').value;
-        const academicYear = document.getElementById('academicYearSelect').value;
-        const semester = document.getElementById('semesterSelect').value;
+        let program = isSuperAdmin ? document.getElementById('manual_programSelect').value : currentAdminProgram;
+        const level = document.getElementById('manual_levelSelect').value;
+        const academicYear = document.getElementById('manual_academicYearSelect').value;
+        const semester = document.getElementById('manual_semesterSelect').value;
         
         const hall = document.getElementById('addHall').value;
         const day = document.getElementById('addDay').value;
@@ -428,10 +477,10 @@
     }
 
     async function loadSchedule() {
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
-        const level = document.getElementById('levelSelect').value;
-        const academicYear = document.getElementById('academicYearSelect').value;
-        const semester = document.getElementById('semesterSelect').value;
+        let program = isSuperAdmin ? document.getElementById('view_programSelect').value : currentAdminProgram;
+        const level = document.getElementById('view_levelSelect').value;
+        const academicYear = document.getElementById('view_academicYearSelect').value;
+        const semester = document.getElementById('view_semesterSelect').value;
 
         if (!program || !level) {
             document.querySelectorAll('.cell-inputs input').forEach(input => {
@@ -502,10 +551,10 @@
     }
 
     async function saveSchedule() {
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
-        const level = document.getElementById('levelSelect').value;
-        const academicYear = document.getElementById('academicYearSelect').value;
-        const semester = document.getElementById('semesterSelect').value;
+        let program = isSuperAdmin ? document.getElementById('view_programSelect').value : currentAdminProgram;
+        const level = document.getElementById('view_levelSelect').value;
+        const academicYear = document.getElementById('view_academicYearSelect').value;
+        const semester = document.getElementById('view_semesterSelect').value;
 
         if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
 
@@ -543,15 +592,11 @@
         if (res.success) loadSchedule();
     }
 
-    // ═══════════════════════════════════════════
-    // 📤 رفع الجدول من ملف Excel
-    // ═══════════════════════════════════════════
-
     function downloadExcelTemplate() {
         const headers = ["Program", "AcademicYear", "Semester", "Level", "Hall", "Day", "Lecture", "Course", "Doctor"];
         const sample = [
-            ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد"],
-            ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي"]
+            ["Microbiology", "2024-2025", "الفصل الأول", "1", "2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد"],
+            ["Microbiology", "2024-2025", "الفصل الأول", "1", "3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي"]
         ];
         
         const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
@@ -570,21 +615,7 @@
             return;
         }
 
-        let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
-        const level = document.getElementById('levelSelect').value;
-        const academicYear = document.getElementById('academicYearSelect').value;
-        const semester = document.getElementById('semesterSelect').value;
-
-        if (!program) {
-            resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر البرنامج أولاً</div>';
-            return;
-        }
-        if (!level) {
-            resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ اختر الفرقة أولاً</div>';
-            return;
-        }
-
-        resultDiv.innerHTML = '<div class="alert alert-info py-2">⏳ جاري قراءة الملف واستخراج القاعات...</div>';
+        resultDiv.innerHTML = '<div class="alert alert-info py-2">⏳ جاري قراءة الملف واستخراج البيانات...</div>';
 
         try {
             const data = await file.arrayBuffer();
@@ -597,22 +628,32 @@
                 return;
             }
 
-            const schedule = [];
+            const groupedSchedules = {};
             const errors = [];
             const extractedHalls = new Set(); 
 
             rows.forEach((row, idx) => {
+                // قراءة البيانات من الملف نفسه
+                const rowProgram = String(row.Program || "").trim();
+                const rowYear = String(row.AcademicYear || "").trim();
+                const rowSemester = String(row.Semester || "").trim();
+                const rowLevel = String(row.Level || "").trim();
+                
                 const hall = String(row.Hall || "").trim();
                 const day = String(row.Day || "").trim();
                 const lecture = String(row.Lecture || "").trim();
                 const course = String(row.Course || "").trim();
                 const doctor = String(row.Doctor || "").trim();
-                const rowLevel = String(row.Level || "").trim();
 
                 const rowNum = idx + 2;
 
-                if (!hall && !day && !lecture && !course) return; 
+                if (!rowProgram && !hall && !day && !lecture && !course) return; // صف فاضي
 
+                // التأكد من وجود البيانات الأساسية
+                if (!rowProgram || !rowYear || !rowSemester || !rowLevel) {
+                    errors.push(`صف ${rowNum}: تأكد من وجود (Program, AcademicYear, Semester, Level)`);
+                    return;
+                }
                 if (!hall || !day || !lecture) {
                     errors.push(`صف ${rowNum}: ناقص Hall/Day/Lecture`);
                     return;
@@ -620,13 +661,24 @@
                 
                 extractedHalls.add(hall);
 
-                schedule.push({
+                const key = `${rowProgram}__${rowYear}__${rowSemester}__${rowLevel}`;
+                if (!groupedSchedules[key]) {
+                    groupedSchedules[key] = {
+                        program: rowProgram,
+                        academicYear: rowYear,
+                        semester: rowSemester,
+                        level: rowLevel,
+                        schedule: []
+                    };
+                }
+
+                groupedSchedules[key].schedule.push({
                     day: day,
                     lecture: lecture,
                     hall: hall,
                     courseName: course,
                     doctorName: doctor,
-                    studentLevel: rowLevel || level,
+                    studentLevel: rowLevel,
                     capacity: HALL_CAPACITIES[hall] || 50
                 });
             });
@@ -636,33 +688,57 @@
                 return;
             }
 
-            if (schedule.length === 0) {
+            if (Object.keys(groupedSchedules).length === 0) {
                 resultDiv.innerHTML = '<div class="alert alert-danger py-2">⚠️ مفيش صفوف صالحة في الملف!</div>';
                 return;
             }
 
             HALLS = []; 
             HALL_CAPACITIES = {};
-            
             extractedHalls.forEach(h => {
                 HALLS.push(h);
                 HALL_CAPACITIES[h] = 50; 
             });
-
             buildTable(); 
 
-            resultDiv.innerHTML = `<div class="alert alert-info py-2">⏳ جاري حفظ ${schedule.length} صف...</div>`;
+            resultDiv.innerHTML = `<div class="alert alert-info py-2">⏳ جاري حفظ البيانات... ممكن ياخد شوية.</div>`;
 
-            const res = await apiCall('saveProgramSchedule', {
-                payload: { program: program, level: level, academicYear: academicYear, semester: semester, schedule: schedule }
-            });
+            let successCount = 0;
+            let failCount = 0;
+            let resultMessages = [];
 
-            if (res.success) {
-                resultDiv.innerHTML = `<div class="alert alert-success py-2">✅ ${res.message}</div>`;
-                fileInput.value = '';
-                setTimeout(() => switchTab('view'), 2000); 
-            } else {
-                resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ ${res.message}</div>`;
+            // لوب بيحفظ كل مجموعة (برنامج + فرقة + عام + فصل) لوحدها
+            for (const key in groupedSchedules) {
+                const group = groupedSchedules[key];
+                const res = await apiCall('saveProgramSchedule', {
+                    payload: { 
+                        program: group.program, 
+                        level: group.level, 
+                        academicYear: group.academicYear, 
+                        semester: group.semester, 
+                        schedule: group.schedule 
+                    }
+                });
+
+                if (res.success) {
+                    successCount++;
+                    resultMessages.push(`✅ (${group.program} - فرقة ${group.level} - ${group.semester}): تم الحفظ.`);
+                } else {
+                    failCount++;
+                    resultMessages.push(`❌ (${group.program} - فرقة ${group.level}): ${res.message}`);
+                }
+            }
+
+            let finalHtml = `<div class="alert ${failCount === 0 ? 'alert-success' : 'alert-warning'} py-2">`;
+            finalHtml += `<strong>تمت العملية!</strong> نجح حفظ ${successCount} مجموعة، فشل ${failCount}.<br><hr class="my-1">`;
+            finalHtml += resultMessages.join('<br>');
+            finalHtml += `</div>`;
+            
+            resultDiv.innerHTML = finalHtml;
+            fileInput.value = '';
+            
+            if (failCount === 0) {
+                setTimeout(() => switchTab('view'), 4000); 
             }
 
         } catch (err) {
@@ -691,15 +767,22 @@
 
             if (savedIsSuper === 'true') {
                 isSuperAdmin = true;
-                document.getElementById('allProgramsView').style.display = 'block';
-                document.getElementById('singleProgramView').style.display = 'none';
+                document.getElementById('view_allProgramsView').style.display = 'block';
+                document.getElementById('view_singleProgramView').style.display = 'none';
+                document.getElementById('manual_allProgramsView').style.display = 'block';
+                document.getElementById('manual_singleProgramView').style.display = 'none';
                 setupProgramsDropdownForAdmin();
             } else {
                 isSuperAdmin = false;
                 currentAdminProgram = savedProgram;
-                document.getElementById('allProgramsView').style.display = 'none';
-                document.getElementById('singleProgramView').style.display = 'block';
-                document.getElementById('programDisplay').value = savedProgramName; 
+                document.getElementById('view_allProgramsView').style.display = 'none';
+                document.getElementById('view_singleProgramView').style.display = 'block';
+                document.getElementById('view_programDisplay').value = savedProgramName;
+                
+                document.getElementById('manual_allProgramsView').style.display = 'none';
+                document.getElementById('manual_singleProgramView').style.display = 'block';
+                document.getElementById('manual_programDisplay').value = savedProgramName;
+
                 buildTable();
                 loadSchedule();
             }
