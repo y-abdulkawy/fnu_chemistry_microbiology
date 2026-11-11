@@ -177,7 +177,7 @@
             <h5 class="fw-bold text-warning mb-3">3️⃣ رفع الجدول من ملف Excel</h5>
             <div class="alert alert-warning py-2 small">
                 ⚠️ <strong>تنسيق الملف المطلوب:</strong> أعمدة بالترتيب:
-                <code>Hall</code> | <code>Day</code> | <code>Lecture</code> | <code>Course</code> | <code>Doctor</code> | <code>Level</code>
+                <code>Program</code> | <code>AcademicYear</code> | <code>Semester</code> | <code>Level</code> | <code>Hall</code> | <code>Day</code> | <code>Lecture</code> | <code>Course</code> | <code>Doctor</code>
                 <br>الصف الأول لازم يكون هيدر بأسماء الأعمدة دي.
                 <a href="#" onclick="downloadExcelTemplate(); return false;" class="fw-bold">📄 تحميل نموذج جاهز</a>
             </div>
@@ -535,11 +535,14 @@
     // ═══════════════════════════════════════════
 
     function downloadExcelTemplate() {
-        const headers = ["Hall", "Day", "Lecture", "Course", "Doctor", "Level"];
+        // 💡 ضفنا الأعمدة كلها هنا
+        const headers = ["Program", "AcademicYear", "Semester", "Level", "Hall", "Day", "Lecture", "Course", "Doctor"];
+        
         const sample = [
-            ["2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد", "1"],
-            ["3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي", "1"]
+            ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد"],
+            ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي"]
         ];
+        
         const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Timetable");
