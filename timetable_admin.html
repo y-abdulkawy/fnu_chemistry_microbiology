@@ -88,33 +88,41 @@
             </div>
             
             <div class="col-md-3">
-                <label class="fw-bold">الفرقة:</label>
+                <label class="fw-bold">المستوى:</label>
                 <div class="checkbox-group">
                     <div class="form-check">
                         <input class="form-check-input view-level-cb" type="checkbox" value="1" id="view_lvl_1" onchange="loadSchedule()">
-                        <label class="form-check-label fw-bold" for="view_lvl_1">الفرقة الأولى</label>
+                        <label class="form-check-label fw-bold" for="view_lvl_1">المستوى  الأول</label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input view-level-cb" type="checkbox" value="2" id="view_lvl_2" onchange="loadSchedule()">
-                        <label class="form-check-label fw-bold" for="view_lvl_2">الفرقة الثانية</label>
+                        <label class="form-check-label fw-bold" for="view_lvl_2">المستوى الثاني</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input view-level-cb" type="checkbox" value="2" id="view_lvl_2" onchange="loadSchedule()">
+                        <label class="form-check-label fw-bold" for="view_lvl_2">المستوى الثالث</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input view-level-cb" type="checkbox" value="2" id="view_lvl_2" onchange="loadSchedule()">
+                        <label class="form-check-label fw-bold" for="view_lvl_2">المستوى الرابع</label>
                     </div>
                 </div>
             </div>
             
             <div class="col-md-3">
-                <label class="fw-bold">العام الدراسي:</label>
+                <label class="fw-bold">العام الأكاديمي:</label>
                 <select id="view_academicYearSelect" class="form-select" onchange="loadSchedule()">
-                    <option value="2024-2025">2024-2025</option>
-                    <option value="2025-2026">2025-2026</option>
-                    <option value="2026-2027">2026-2027</option>
+                    <option value="2024-2025">2026-2027</option>
+                    <option value="2025-2026">2027-2028</option>
+                    <option value="2026-2027">2028-2029</option>
                 </select>
             </div>
             
             <div class="col-md-3">
                 <label class="fw-bold">الفصل الدراسي:</label>
                 <select id="view_semesterSelect" class="form-select" onchange="loadSchedule()">
-                    <option value="الفصل الأول">الفصل الأول</option>
-                    <option value="الفصل الثاني">الفصل الثاني</option>
+                    <option value="الفصل الخريفي">الفصل الخريفي</option>
+                    <option value="الفصل الربيعي">الفصل الربيعي</option>
                     <option value="الفصل الصيفي">الفصل الصيفي</option>
                 </select>
             </div>
@@ -147,11 +155,13 @@
                 <select id="manual_programSelect" class="form-select" onchange="populateAddForm()"></select>
             </div>
             <div class="col-md-3">
-                <label class="fw-bold">الفرقة:</label>
+                <label class="fw-bold">المستوى:</label>
                 <select id="manual_levelSelect" class="form-select" onchange="populateAddForm()">
-                    <option value="">اختر الفرقة...</option>
-                    <option value="1">الفرقة الأولى</option>
-                    <option value="2">الفرقة الثانية</option>
+                    <option value="">اختر المستوى</option>
+                    <option value="1">المستوى الأول</option>
+                    <option value="2">المستوى الثاني</option>
+                    <option value="3">المستوى الثالث</option>
+                    <option value="4">المستوى الرابع</option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -165,8 +175,8 @@
             <div class="col-md-3">
                 <label class="fw-bold">الفصل الدراسي:</label>
                 <select id="manual_semesterSelect" class="form-select" onchange="populateAddForm()">
-                    <option value="الفصل الأول">الفصل الأول</option>
-                    <option value="الفصل الثاني">الفصل الثاني</option>
+                    <option value="الفصل الخريفي">الفصل الخريفي</option>
+                    <option value="الفصل الربيعي">الفصل الربيعي</option>
                     <option value="الفصل الصيفي">الفصل الصيفي</option>
                 </select>
             </div>
@@ -233,7 +243,7 @@
                 <br>
                 <code>Program</code> | <code>AcademicYear</code> | <code>Semester</code> | <code>Level</code> | <code>Hall</code> | <code>Day</code> | <code>Lecture</code> | <code>Course</code> | <code>Doctor</code>
                 <br>
-                <span class="text-danger fw-bold">هام جداً:</span> الكود هيقرأ (البرنامج، العام، الفصل، الفرقة) من الملف نفسه، ويحفظ كل صف في مكانه الصح.
+                <span class="text-danger fw-bold">هام جداً:</span> الكود هيقرأ (البرنامج، العام، الفصل، المستوى) من الملف نفسه، ويحفظ كل صف في مكانه الصح.
                 <br><br>
                 <a href="#" onclick="downloadExcelTemplate(); return false;" class="btn btn-outline-dark btn-sm fw-bold">📄 تحميل نموذج جاهز</a>
             </div>
@@ -382,7 +392,7 @@
                                 <div class="cell-inputs" id="container_${cellId}">
                                     <input type="text" placeholder="المقرر" id="${cellId}_course" readonly>
                                     <input type="text" placeholder="الدكتور" id="${cellId}_doctor" readonly>
-                                    <input type="text" placeholder="الفرقة" id="${cellId}_level" readonly>
+                                    <input type="text" placeholder="المستوى" id="${cellId}_level" readonly>
                                 </div>
                             </td>
                         `;
@@ -490,7 +500,7 @@
         const subSelect = document.getElementById('addSubject');
         const course = subSelect.value;
         
-        if (!program || !level) return alert("اختر البرنامج والفرقة أولاً");
+        if (!program || !level) return alert("اختر البرنامج و أولاً");
         if (!course) return alert("اختر المقرر");
         
         const doctorName = subSelect.options[subSelect.selectedIndex].getAttribute('data-doctor') || "غير محدد";
@@ -585,7 +595,7 @@
                     
                     if (isMine) {
                         let courseTxt = booking.courseName || "";
-                        // لو أكتر من فرقة معروضة، نضيف اسم الفرقة عشان نعرف نفرق
+                        // لو أكتر من فرقة معروضة، نضيف اسم المستوى عشان نعرف نفرق
                         if (selectedLevels.length > 1) {
                             courseTxt = `[ف${booking.level}] ${courseTxt}`;
                         }
