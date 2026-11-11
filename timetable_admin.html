@@ -105,22 +105,23 @@
         </div>
     </div>
 
-    <!-- أزرار التنقل بين العرض والإضافة -->
+    <!-- أزرار التنقل بين التابات -->
     <div class="btn-group w-100 mb-3 shadow-sm" role="group">
-        <button type="button" class="btn btn-primary fw-bold" id="btnViewMode" onclick="switchMode('view')">👁️ عرض الجدول الحالي</button>
-        <button type="button" class="btn btn-outline-primary fw-bold" id="btnEditMode" onclick="switchMode('edit')">➕ إضافة وتعديل الجدول</button>
+        <button type="button" class="btn btn-primary fw-bold" id="btnTabView" onclick="switchTab('view')">👁️ عرض الجدول</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" id="btnTabManual" onclick="switchTab('manual')">➕ إضافة يدوية</button>
+        <button type="button" class="btn btn-outline-primary fw-bold" id="btnTabUpload" onclick="switchTab('upload')">📤 رفع ملف إكسيل</button>
     </div>
 
-    <!-- وضع العرض (الجدول) -->
-    <div id="viewModeContainer">
+    <!-- 1. قسم عرض الجدول -->
+    <div id="viewContainer">
         <div class="timetable-wrapper shadow-sm">
             <table class="timetable-main" id="mainTable"></table>
         </div>
         <button class="btn btn-success w-100 mt-3 fw-bold py-2" onclick="saveSchedule()" id="saveBtn">💾 حفظ الجدول</button>
     </div>
 
-    <!-- وضع الإضافة -->
-    <div id="editModeContainer" class="d-none">
+    <!-- 2. قسم الإضافة اليدوية -->
+    <div id="manualAddContainer" class="d-none">
         <!-- إضافة مقرر ودكتور جديد -->
         <div class="bg-white p-4 rounded shadow-sm mb-4">
             <h5 class="fw-bold text-success mb-3">1️⃣ إضافة مقرر ودكتور جديد للبرنامج</h5>
@@ -171,8 +172,10 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- رفع جدول من ملف Excel -->
+    <!-- 3. قسم رفع ملف الإكسيل -->
+    <div id="uploadContainer" class="d-none">
         <div class="bg-white p-4 rounded shadow-sm mb-4">
             <h5 class="fw-bold text-warning mb-3">3️⃣ رفع الجدول من ملف Excel</h5>
             <div class="alert alert-warning py-2 small">
@@ -198,7 +201,6 @@
 <script>
     const API_URL = 'https://fnuebook.yma00.workers.dev'; 
     
-    // 💡 مصفوفات القاعات بقت فاضية عشان تتبني من ملف الإكسيل
     let HALLS = [];
     let HALL_CAPACITIES = {};
     
@@ -291,8 +293,7 @@
         html += `</tr>`;
 
         if (HALLS.length === 0) {
-            // 💡 صلحنا الـ colspan هنا عشان يبقى 32 (2 مكان + 30 محاضرة)
-            html += `<tr><td colspan="32" class="text-center text-muted fw-bold py-4">⚠️ لا توجد قاعات. يرجى رفع ملف إكسيل بالجدول أولاً.</td></tr>`;
+            html += `<tr><td colspan="32" class="text-center text-muted fw-bold py-4">⚠️ لا توجد قاعات. يرجى رفع ملف إكسيل بالجدول أو إضافة صفوف يدوياً.</td></tr>`;
         } else {
             HALLS.forEach((hall, hallIndex) => {
                 html += `<tr>`;
@@ -316,38 +317,49 @@
                 html += `</tr>`;
             });
         }
-
         table.innerHTML = html;
     }
 
-    function switchMode(mode) {
-        const btnView = document.getElementById('btnViewMode');
-        const btnEdit = document.getElementById('btnEditMode');
-        const viewContainer = document.getElementById('viewModeContainer');
-        const editContainer = document.getElementById('editModeContainer');
+    // التبديل بين التابات الثلاثة
+    function switchTab(tab) {
+        const btnView = document.getElementById('btnTabView');
+        const btnManual = document.getElementById('btnTabManual');
+        const btnUpload = document.getElementById('btnTabUpload');
+        
+        const viewContainer = document.getElementById('viewContainer');
+        const manualContainer = document.getElementById('manualAddContainer');
+        const uploadContainer = document.getElementById('uploadContainer');
 
-        if (mode === 'view') {
-            btnView.classList.replace('btn-outline-primary', 'btn-primary');
-            btnEdit.classList.replace('btn-primary', 'btn-outline-primary');
+        // إخفاء الكل وإرجاع الأزرار للون الشفاف
+        viewContainer.classList.add('d-none');
+        manualContainer.classList.add('d-none');
+        uploadContainer.classList.add('d-none');
+        
+        btnView.className = 'btn btn-outline-primary fw-bold';
+        btnManual.className = 'btn btn-outline-primary fw-bold';
+        btnUpload.className = 'btn btn-outline-primary fw-bold';
+
+        // إظهار القسم المطلوب
+        if (tab === 'view') {
+            btnView.className = 'btn btn-primary fw-bold';
             viewContainer.classList.remove('d-none');
-            editContainer.classList.add('d-none');
             loadSchedule();
-        } else {
-            btnEdit.classList.replace('btn-outline-primary', 'btn-primary');
-            btnView.classList.replace('btn-primary', 'btn-outline-primary');
-            viewContainer.classList.add('d-none');
-            editContainer.classList.remove('d-none');
+        } else if (tab === 'manual') {
+            btnManual.className = 'btn btn-primary fw-bold';
+            manualContainer.classList.remove('d-none');
             populateAddForm();
+        } else if (tab === 'upload') {
+            btnUpload.className = 'btn btn-primary fw-bold';
+            uploadContainer.classList.remove('d-none');
         }
     }
 
-    // 💡 صلحنا اسم الدالة هنا كانت ممسوحة وده اللي كان بيكسر الصفحة
     async function populateAddForm() {
         const hallSelect = document.getElementById('addHall');
         hallSelect.innerHTML = '';
         
         if (HALLS.length === 0) {
-            hallSelect.innerHTML = '<option value="">⚠️ ارفع ملف إكسيل أولاً عشان تتضاف القاعات</option>';
+            hallSelect.innerHTML = '<option value="">⚠️ ارفع ملف إكسيل أو أضف قاعة أولاً</option>';
         } else {
             HALLS.forEach(h => hallSelect.innerHTML += `<option value="${h}">${h} (${HALL_CAPACITIES[h] || 50} طالب)</option>`);
         }
@@ -385,6 +397,9 @@
     async function addRowToSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
+        const academicYear = document.getElementById('academicYearSelect').value;
+        const semester = document.getElementById('semesterSelect').value;
+        
         const hall = document.getElementById('addHall').value;
         const day = document.getElementById('addDay').value;
         const lecture = document.getElementById('addLecture').value;
@@ -403,18 +418,16 @@
         }];
 
         const res = await apiCall('saveProgramSchedule', {
-            payload: { program: program, level: level, schedule: schedule }
+            payload: { program: program, level: level, academicYear: academicYear, semester: semester, schedule: schedule }
         });
 
         alert(res.message);
         if (res.success) {
-            switchMode('view'); 
+            switchTab('view'); 
         }
     }
 
-
-
-        async function loadSchedule() {
+    async function loadSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
         const academicYear = document.getElementById('academicYearSelect').value;
@@ -487,8 +500,8 @@
             }
         });
     }
-    
-       async function saveSchedule() {
+
+    async function saveSchedule() {
         let program = isSuperAdmin ? document.getElementById('programSelect').value : currentAdminProgram;
         const level = document.getElementById('levelSelect').value;
         const academicYear = document.getElementById('academicYearSelect').value;
@@ -535,9 +548,7 @@
     // ═══════════════════════════════════════════
 
     function downloadExcelTemplate() {
-        // 💡 ضفنا الأعمدة كلها هنا
         const headers = ["Program", "AcademicYear", "Semester", "Level", "Hall", "Day", "Lecture", "Course", "Doctor"];
-        
         const sample = [
             ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "2B-EDU01", "السبت", "المحاضرة الأولى", "كيمياء عضوية", "د. أحمد محمد"],
             ["برنامج الكيمياء والميكروبيولوجي", "2024-2025", "الفصل الأول", "1", "3B-LAB02", "الأحد", "المحاضرة الثانية", "فيزياء عامة", "د. منى علي"]
@@ -549,8 +560,7 @@
         XLSX.writeFile(wb, "نموذج_الجدول_الدراسي.xlsx");
     }
 
-
-        async function uploadExcelSchedule() {
+    async function uploadExcelSchedule() {
         const fileInput = document.getElementById('excelFileInput');
         const resultDiv = document.getElementById('excelUploadResult');
         const file = fileInput.files[0];
@@ -650,7 +660,7 @@
             if (res.success) {
                 resultDiv.innerHTML = `<div class="alert alert-success py-2">✅ ${res.message}</div>`;
                 fileInput.value = '';
-                setTimeout(() => switchMode('view'), 2000); 
+                setTimeout(() => switchTab('view'), 2000); 
             } else {
                 resultDiv.innerHTML = `<div class="alert alert-danger py-2">❌ ${res.message}</div>`;
             }
