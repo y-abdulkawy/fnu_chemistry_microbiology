@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
      
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
@@ -244,16 +245,14 @@
             </div>
 
             <!-- 4. تاب نتائج الكويزات -->
-            <!-- 4. تاب نتائج الكويزات -->
             <div class="tab-pane fade" id="results-pane" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold text-success mb-0">📊 نتائج الكويزات</h5>
                 </div>
-                <!-- كروت الكويزات هتظهر هنا -->
                 <div id="doctorQuizzesResultsList" class="row g-3"></div>
             </div>
 
-            <!-- Modal لعرض تفاصيل الكويز (مخفي في البداية) -->
+            <!-- Modal لعرض تفاصيل الكويز -->
             <div class="modal fade" id="quizDetailsModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
@@ -281,6 +280,21 @@
                 </div>
             </div>           
 
+            <!-- Modal لعرض الرسم البياني (مخفي) -->
+            <div class="modal fade" id="statsModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+              <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="statsModalTitle">📊 تحليل إجابات الكويز</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body" style="background-color: #f8f9fa;">
+                    <div id="chartsContainer" class="row g-4"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
         </div>
     </div>
 
@@ -289,6 +303,7 @@
         const API_URL = 'https://fnuebook.yma00.workers.dev'; 
         let currentDoctor = null;
         let doctorCoursesData = [];
+        let allDoctorResults = []; 
 
         async function apiCall(action, params) {
             try {
@@ -416,7 +431,6 @@
             const filesToUpload = [];
             const uniqueHashes = new Set(); 
         
-            // 1. استخراج البصمة محلياً
             for (let row of fileRows) {
                 const title = row.querySelector('.file-title').value.trim();
                 const file = row.querySelector('.file-input').files[0];
@@ -443,7 +457,6 @@
             let completed = 0;
         
             try {
-                // 2. الفحص المزدوج (بصمة ثم اسم)
                 for (let item of filesToUpload) {
                     const checkRes = await apiCall('checkFileAndGetVersion', { 
                         nationalId: currentDoctor.nationalId, 
@@ -457,12 +470,9 @@
                     if (checkRes.existsHash) {
                         throw new Error("⚠️ الملف (" + item.title + ") موجود بالفعل بنفس المحتوى. يرجى عدم تكراره.");
                     }
-
-                    // تحديث اسم الملف بالنسخة الجديدة (v2 أو v3)
                     item.fileName = checkRes.uniqueName;
                 }
 
-                // 3. الرفع الفعلي
                 progressBox.classList.remove('d-none'); 
                 progressBar.style.width = '0%'; 
                 progressBar.innerText = 'جاري الرفع...';
@@ -508,7 +518,6 @@
                     completed++;
                 }
         
-                // 4. الحفظ
                 alertDiv.className = 'alert alert-info mt-3 d-block'; 
                 alertDiv.innerText = 'جاري حفظ البيانات...';
 
@@ -573,7 +582,6 @@
             container.appendChild(newRow);
         }
 
-        // دالة جديدة لحذف الصف
         function removeFileRow(btn) {
             const rows = document.querySelectorAll('.file-row');
             if (rows.length > 1) {
@@ -759,8 +767,7 @@
             reader.readAsArrayBuffer(file);
         }
 
-              function loadMyUploads() {
-            // تحميل الملفات
+        function loadMyUploads() {
             const container = document.getElementById('myFilesContainer');
             container.innerHTML = '<div class="text-center text-muted p-3">جاري التحميل...</div>';
             
@@ -771,23 +778,15 @@
                     res.courses.forEach(c => {
                         let files = [];
                         try {
-                            // محاولة قراءة الملفات بأمان
                             files = JSON.parse(c.fileUrl);
                             if (!Array.isArray(files)) files = []; 
-                        } catch (e) {
-                            console.log("خطأ في قراءة ملفات المقرر: " + c.courseName);
-                            return; // لو الشكل مكسور، نتخطى المقرر ده ونكمل الباقي
-                        }
+                        } catch (e) { return; }
 
-                        if (files.length === 0) return; // لو مفيش ملفات، مش هنعرض الكارت
-                        
+                        if (files.length === 0) return; 
 
-
-
-                                                let filesHtml = files.map((f, index) => {
+                        let filesHtml = files.map((f, index) => {
                             let isHidden = f.isHidden === true;
                             let btnClass = isHidden ? 'btn-success' : 'btn-danger';
-                            // النص بقى "إخفاء الملف" زي ما طلبت
                             let btnText = isHidden ? '👁️ إظهار' : '🙈 إخفاء الملف'; 
                             
                             let displayName = f.title;
@@ -811,11 +810,6 @@
                                 </li>
                             `;
                         }).join('');
-
-
-
-
-                        
 
                         html += `
                             <div class="card mb-3 shadow-sm border-0">
@@ -841,7 +835,6 @@
                 }
             });
 
-            // تحميل الكويزات
             const quizzesBody = document.getElementById('myQuizzesBody');
             if (quizzesBody) {
                 quizzesBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">جاري التحميل...</td></tr>';
@@ -862,15 +855,6 @@
             }
         }
 
-        // دالة الإخفاء
-
-
-
-
-
-        
-
-
         function toggleFileVisibility(courseName, academicYear, fileName, fileTitle, btnElement) {
             btnElement.disabled = true;
             btnElement.innerText = '...';
@@ -885,16 +869,12 @@
                 if (res.success) {
                     loadMyUploads(); 
                 } else {
-                    alert(res.message); // هيظهرلك الرسالة اللي جاية من السيرفر
+                    alert(res.message); 
                     btnElement.disabled = false;
                     btnElement.innerText = 'إعادة محاولة';
                 }
             });
         }
-
-
-
-        let allDoctorResults = []; // متغير لحفظ كل النتائج
 
         function loadDoctorResults() {
             const container = document.getElementById('doctorQuizzesResultsList');
@@ -909,7 +889,6 @@
                 allDoctorResults = res.results;
                 const quizzesMap = {};
 
-                // تجميع النتائج حسب اسم الكويز
                 allDoctorResults.forEach(r => {
                     const key = r.quizTitle + "___" + r.courseName;
                     if (!quizzesMap[key]) {
@@ -918,7 +897,6 @@
                     quizzesMap[key].count++;
                 });
 
-                // بناء كروت الكويزات
                 let html = '';
                 for (const key in quizzesMap) {
                     const q = quizzesMap[key];
@@ -939,17 +917,20 @@
             });
         }
 
-        // دالة فتح الشاشة المنبثقة
         function showQuizDetails(quizKey) {
             const [title, course] = quizKey.split("___");
             const quizResults = allDoctorResults.filter(r => r.quizTitle === title && r.courseName === course);
             
-            document.getElementById('modalQuizTitle').innerText = `نتائج: ${title} - ${course}`;
+            // زرار التحليل الجديد
+            document.getElementById('modalQuizTitle').innerHTML = `
+                نتائج: ${title} - ${course} 
+                <button class="btn btn-sm btn-light text-success fw-bold ms-3 shadow-sm" onclick="showQuizStats('${title}', '${course}')">📊 تحليل إجابات الطلاب</button>
+            `;
+            
             const tbody = document.getElementById('modalResultsBody');
             tbody.innerHTML = '';
 
             quizResults.forEach(r => {
-                // تجميع الإجابات في نص مقروء (مثلاً: Q1: 2 | Q2: 4)
                 let answersHtml = '';
                 if (r.answers && Object.keys(r.answers).length > 0) {
                     answersHtml = Object.keys(r.answers).map(qIdx => {
@@ -963,7 +944,7 @@
                     <tr>
                         <td><b>${r.studentName}</b></td>
                         <td>${r.nationalId}</td>
-                        <td><span class="badge bg-primary">${r.earnedGrades} / ${r.totalGrades}</span></td>
+                        <td><span class="badge bg-primary fs-6">${r.earnedGrades}</span></td>
                         <td><span class="badge ${parseFloat(r.percentage) >= 50 ? 'bg-success' : 'bg-danger'}">${r.percentage}</span></td>
                         <td style="text-align: right;">${answersHtml}</td>
                     </tr>
@@ -973,7 +954,96 @@
             new bootstrap.Modal(document.getElementById('quizDetailsModal')).show();
         }
 
-        // دالة تحميل الإكسيل
+        // الدالة الجديدة للرسم البياني
+        async function showQuizStats(quizTitle, courseName) {
+            document.getElementById('statsModalTitle').innerText = "📊 تحليل إجابات: " + quizTitle;
+            const container = document.getElementById('chartsContainer');
+            container.innerHTML = '<div class="col-12 text-center py-5"><h4>⏳ جاري حساب الإحصائيات ورسم المخططات...</h4></div>';
+            
+            const statsModal = new bootstrap.Modal(document.getElementById('statsModal'));
+            statsModal.show();
+
+            // طلب الإحصائيات والإجابات الصح من السيرفر
+            const res = await apiCall('getQuizDetailsForDoctor', { quizTitle: quizTitle, courseName: courseName });
+            
+            if (!res.success) {
+                container.innerHTML = `<div class="col-12 text-center text-danger"><h5>❌ خطأ: ${res.message}</h5></div>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            const qStats = res.stats;
+            const correctAnswers = res.correctAnswers || [];
+
+            if (Object.keys(qStats).length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-5"><h5>لم يقم أي طالب بحل هذا الكويز بعد.</h5></div>';
+                return;
+            }
+
+            for (const qIdx in qStats) {
+                const stat = qStats[qIdx];
+                const correctOptNum = correctAnswers[qIdx] ? String(correctAnswers[qIdx]) : "1"; // الافتراضي 1
+                
+                const chartDivId = `chart_${qIdx}`;
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light fw-bold">
+                                السؤال رقم ${parseInt(qIdx) + 1} (عدد الإجابات: ${stat.total})
+                            </div>
+                            <div class="card-body">
+                                <canvas id="${chartDivId}" style="max-height: 250px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    const ctx = document.getElementById(chartDivId).getContext('2d');
+                    
+                    // تجهيز الألوان (الإجابة الصح خضراء)
+                    const bgColors = ['1', '2', '3', '4'].map(opt => {
+                        return opt === correctOptNum ? 'rgba(25, 135, 84, 0.8)' : 'rgba(13, 110, 253, 0.4)';
+                    });
+                    const borderColors = ['1', '2', '3', '4'].map(opt => {
+                        return opt === correctOptNum ? 'rgba(25, 135, 84, 1)' : 'rgba(13, 110, 253, 1)';
+                    });
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['اختيار 1', 'اختيار 2', 'اختيار 3', 'اختيار 4'],
+                            datasets: [{
+                                label: 'عدد الطلاب',
+                                data: [stat.options["1"], stat.options["2"], stat.options["3"], stat.options["4"]],
+                                backgroundColor: bgColors,
+                                borderColor: borderColors,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) { label += ': '; }
+                                            if (context.parsed.y !== null) { label += context.parsed.y; }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                        }
+                    });
+                }, 100);
+            }
+        }
+
         function exportModalTableToExcel() {
             const table = document.getElementById('detailedResultsTable');
             if (!table) return;
@@ -981,7 +1051,6 @@
             XLSX.writeFile(wb, 'تفاصيل_نتائج_الكويز.xlsx');
         }
 
-        // دالة تحميل الـ PDF
         function exportModalTableToPDF() {
             const element = document.getElementById('modalTableContainer');
             if (!element) return;
@@ -995,44 +1064,6 @@
             html2pdf().set(opt).from(element).save();
         }
 
-
-
-
-
-
-
-
-
-
-        
-
-        
-
-        
-
-        // دالة تحميل الإكسيل
-        function exportResultsToExcel() {
-            const table = document.getElementById('resultsTable');
-            if (!table) return;
-            const wb = XLSX.utils.table_to_book(table, {sheet: "النتائج"});
-            XLSX.writeFile(wb, 'نتائج_الكويزات.xlsx');
-        }
-
-        // دالة تحميل الـ PDF
-        function exportResultsToPDF() {
-            const element = document.getElementById('resultsTableContainer');
-            if (!element) return;
-            const opt = {
-                margin:       0.5,
-                filename:     'نتائج_الكويزات.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'landscape' }
-            };
-            html2pdf().set(opt).from(element).save();
-        }
-
-        // --- نظام كشف التحديثات وتغيير اللون أوتوماتيك ---
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const githubApiUrl = 'https://api.github.com/repos/y-abdulkawy/fnu_chemistry_microbiology/commits?path=doctor.html&page=1&per_page=1';
@@ -1053,11 +1084,10 @@
                         if (loginBtn) loginBtn.style.background = newColor;
 
                         localStorage.setItem('fnu_last_commit', latestCommitHash);
-                        console.log("تم اكتشاف تحديث جديد: " + latestCommitHash);
                     }
                 }
             } catch (error) {
-                console.log("لم يتمكن من الاتصال بـ GitHub لجلب التحديثات.");
+                console.log("لم يتمكن من الاتصال بـ GitHub.");
             }
 
             const savedSession = localStorage.getItem('fnu_doctor_session');
